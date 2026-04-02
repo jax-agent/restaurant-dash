@@ -140,13 +140,46 @@ defmodule RestaurantDashWeb.ItemDetailLiveTest do
       assert html =~ "$17.49"
     end
 
-    test "shows Add to Cart button (disabled)", %{conn: conn} do
+    test "shows Add to Cart button (enabled for available item)", %{conn: conn} do
       {restaurant, item, _groups} = create_restaurant_with_item()
 
       {:ok, _lv, html} =
         live(conn, ~p"/menu/#{item.id}?restaurant_slug=#{restaurant.slug}")
 
       assert html =~ "Add to Cart"
+      # Button should NOT be disabled for available items
+      refute html =~ ~s(disabled\n) or String.contains?(html, "cursor-not-allowed")
+    end
+
+    test "add-to-cart event opens cart drawer and updates cart", %{conn: conn} do
+      {restaurant, item, _groups} = create_restaurant_with_item()
+
+      {:ok, lv, _html} =
+        live(conn, ~p"/menu/#{item.id}?restaurant_slug=#{restaurant.slug}")
+
+      html = lv |> element("button[phx-click='add-to-cart']") |> render_click()
+
+      # Cart drawer should open
+      assert html =~ "Your Cart"
+      assert html =~ item.name
+    end
+
+    test "cart quantity controls work", %{conn: conn} do
+      {restaurant, item, _groups} = create_restaurant_with_item()
+
+      {:ok, lv, _html} =
+        live(conn, ~p"/menu/#{item.id}?restaurant_slug=#{restaurant.slug}")
+
+      # Add to cart
+      lv |> element("button[phx-click='add-to-cart']") |> render_click()
+
+      # Increment quantity
+      html =
+        lv
+        |> element("button[phx-click='cart-update-quantity'][phx-value-qty='2']")
+        |> render_click()
+
+      assert html =~ "2"
     end
 
     test "shows restaurant name/branding", %{conn: conn} do

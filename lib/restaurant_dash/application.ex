@@ -13,6 +13,8 @@ defmodule RestaurantDash.Application do
       {DNSCluster, query: Application.get_env(:restaurant_dash, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: RestaurantDash.PubSub},
       {Oban, Application.fetch_env!(:restaurant_dash, Oban)},
+      # Cart store (ETS-backed, session-scoped carts)
+      RestaurantDash.Cart.Store,
       # Start to serve requests, typically the last entry
       RestaurantDashWeb.Endpoint
     ]

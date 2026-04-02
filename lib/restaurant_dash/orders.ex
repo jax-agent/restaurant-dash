@@ -6,6 +6,8 @@ defmodule RestaurantDash.Orders do
   import Ecto.Query, warn: false
   alias RestaurantDash.Repo
   alias RestaurantDash.Orders.Order
+  alias RestaurantDash.Orders.OrderItem
+  alias RestaurantDash.Cart
 
   @pubsub RestaurantDash.PubSub
   @topic "orders"
@@ -129,6 +131,55 @@ defmodule RestaurantDash.Orders do
     Repo.delete(order)
   end
 
+  @doc """
+  Create an order from a cart + customer info. Wraps in a transaction.
+
+  attrs must include:
+  - customer_name, customer_email, customer_phone, delivery_address, restaurant_id
+
+  Returns {:ok, order} with preloaded order_items, or {:error, changeset}.
+  """
+  def create_order_from_cart(%Cart{} = cart, attrs) do
+    totals = Cart.calculate_totals(cart)
+
+    order_attrs =
+      attrs
+      |> Map.put(:subtotal, totals.subtotal)
+      |> Map.put(:tax_amount, totals.tax)
+      |> Map.put(:delivery_fee, totals.delivery_fee)
+      |> Map.put(:tip_amount, totals.tip)
+      |> Map.put(:total_amount, totals.total)
+      |> Map.put(:status, "new")
+
+    Repo.transaction(fn ->
+      with {:ok, order} <-
+             %Order{}
+             |> Order.cart_order_changeset(order_attrs)
+             |> Repo.insert(),
+           :ok <- insert_order_items(order, cart.items) do
+        order = Repo.preload(order, :order_items)
+        broadcast(:order_created, order)
+        order
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  @doc "Get order with order_items preloaded."
+  def get_order_with_items!(id) do
+    Order
+    |> Repo.get!(id)
+    |> Repo.preload(:order_items)
+  end
+
+  def get_order_with_items(id) do
+    case Repo.get(Order, id) do
+      nil -> nil
+      order -> Repo.preload(order, :order_items)
+    end
+  end
+
   # ─── Changeset ─────────────────────────────────────────────────────────────
 
   def change_order(%Order{} = order, attrs \\ %{}) do
@@ -155,4 +206,44 @@ defmodule RestaurantDash.Orders do
   end
 
   defp tap_broadcast(result, _event), do: result
+
+  defp insert_order_items(_order, []), do: :ok
+
+  defp insert_order_items(order, items) do
+    result =
+      Enum.reduce_while(items, :ok, fn cart_item, :ok ->
+        attrs = %{
+          order_id: order.id,
+          menu_item_id: cart_item.menu_item_id,
+          name: cart_item.name,
+          quantity: cart_item.quantity,
+          unit_price: Cart.CartItem.unit_price(cart_item),
+          modifiers_json: encode_modifiers(cart_item.modifier_names),
+          line_total: cart_item.line_total
+        }
+
+        case %OrderItem{} |> OrderItem.changeset(attrs) |> Repo.insert() do
+          {:ok, _} -> {:cont, :ok}
+          {:error, cs} -> {:halt, {:error, cs}}
+        end
+      end)
+
+    case result do
+      :ok -> :ok
+      {:error, _} = err -> err
+    end
+  end
+
+  defp encode_modifiers(modifier_names) when is_list(modifier_names) do
+    modifier_names
+    |> Enum.map(fn
+      {name, price_adj} -> %{name: name, price_adjustment: price_adj}
+      name when is_binary(name) -> %{name: name, price_adjustment: 0}
+    end)
+    |> Jason.encode!()
+  rescue
+    _ -> "[]"
+  end
+
+  defp encode_modifiers(_), do: "[]"
 end

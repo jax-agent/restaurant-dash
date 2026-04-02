@@ -34,6 +34,10 @@ defmodule RestaurantDashWeb.Router do
 
     live "/orders/new", OrderFormLive, :new
     live "/orders/:id/edit", OrderFormLive, :edit
+
+    # Phase 3: Customer ordering
+    live "/checkout", CheckoutLive, :index
+    live "/orders/:id/track", TrackOrderLive, :show
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
