@@ -15,6 +15,7 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :logo_url, :string
     field :timezone, :string, default: "America/Chicago"
     field :is_active, :boolean, default: true
+    field :stripe_account_id, :string
 
     has_many :orders, RestaurantDash.Orders.Order
 

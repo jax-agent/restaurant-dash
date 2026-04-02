@@ -23,6 +23,10 @@ defmodule RestaurantDash.Orders.Order do
     field :tip_amount, :integer, default: 0
     field :total_amount, :integer, default: 0
 
+    # Phase 4: Payment fields
+    field :payment_status, :string, default: "pending"
+    field :payment_intent_id, :string
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     has_many :order_items, RestaurantDash.Orders.OrderItem
 
@@ -73,7 +77,9 @@ defmodule RestaurantDash.Orders.Order do
       :tax_amount,
       :delivery_fee,
       :tip_amount,
-      :total_amount
+      :total_amount,
+      :payment_status,
+      :payment_intent_id
     ])
     |> validate_required([
       :customer_name,

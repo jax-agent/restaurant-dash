@@ -86,6 +86,13 @@ config :restaurant_dash, Oban,
      ]}
   ]
 
+# Stripe configuration (mock mode when no key configured)
+config :restaurant_dash, :stripe,
+  secret_key: System.get_env("STRIPE_SECRET_KEY"),
+  webhook_secret: System.get_env("STRIPE_WEBHOOK_SECRET"),
+  # Platform fee percentage (default 5%)
+  platform_fee_percent: 5
+
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
