@@ -27,7 +27,7 @@ config :restaurant_dash, :branding,
   logo_url: System.get_env("LOGO_URL", "🍕")
 
 config :restaurant_dash, RestaurantDashWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+  http: [ip: {0, 0, 0, 0}, port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
   database_url =

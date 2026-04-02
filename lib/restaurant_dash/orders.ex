@@ -104,6 +104,7 @@ defmodule RestaurantDash.Orders do
     rescue
       ArgumentError -> :ok
     end
+
     result
   end
 
