@@ -1,20 +1,18 @@
 // DeliveryMap LiveView hook — Leaflet + OpenStreetMap
 // Renders markers for orders that are out_for_delivery.
 // Listens to "update_marker" push events from the server.
-
-import L from "leaflet"
-import "leaflet/dist/leaflet.css"
-
-// Fix Leaflet default icon paths (broken by bundlers)
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-})
+//
+// Leaflet is loaded from CDN (see root.html.heex).
+// The global `L` object is available on window.
 
 const DeliveryMap = {
   mounted() {
+    const L = window.L
+    if (!L) {
+      console.error("Leaflet not loaded — ensure CDN script is in root.html.heex")
+      return
+    }
+
     const primaryColor = this.el.dataset.primaryColor || "#E63946"
     const orders = JSON.parse(this.el.dataset.orders || "[]")
 
@@ -26,6 +24,7 @@ const DeliveryMap = {
       maxZoom: 19,
     }).addTo(this.map)
 
+    this.L = L
     this.markers = {}
     this.primaryColor = primaryColor
 
@@ -39,6 +38,7 @@ const DeliveryMap = {
   },
 
   updated() {
+    if (!this.L) return
     // When the element is updated (phx-update="ignore" prevents this, but just in case)
     const orders = JSON.parse(this.el.dataset.orders || "[]")
     const existingIds = new Set(Object.keys(this.markers).map(Number))
@@ -64,8 +64,9 @@ const DeliveryMap = {
   },
 
   _addOrUpdateMarker(order) {
-    if (!order.lat || !order.lng) return
+    if (!order.lat || !order.lng || !this.L) return
 
+    const L = this.L
     const popupContent = this._buildPopup(order)
 
     if (this.markers[order.id]) {
@@ -85,6 +86,7 @@ const DeliveryMap = {
   },
 
   _createIcon() {
+    const L = this.L
     return L.divIcon({
       className: "",
       html: `<div style="
