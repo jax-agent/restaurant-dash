@@ -97,11 +97,11 @@
 
 <%!-- New Order Modal --%>
 <%= if @show_new_order_modal do %>
-  <div class="modal-overlay" phx-click="close_modal">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">New Order</h2>
-        <button class="modal-close" phx-click="close_modal">&times;</button>
+  <div class="order-modal-overlay" phx-click="close_modal">
+    <div class="order-modal" onclick="event.stopPropagation()">
+      <div class="order-modal-header">
+        <h2 class="order-modal-title">New Order</h2>
+        <button class="order-modal-close" phx-click="close_modal">&times;</button>
       </div>
 
       <.form for={@form} phx-change="validate" phx-submit="save_order" class="order-form">

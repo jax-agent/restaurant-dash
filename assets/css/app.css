@@ -406,7 +406,7 @@ body {
 
 /* ─── Modal ───────────────────────────────────────────────────────────────── */
 
-.modal-overlay {
+.order-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
@@ -418,7 +418,7 @@ body {
   isolation: isolate;
 }
 
-.modal {
+.order-modal {
   background: white;
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
@@ -428,7 +428,7 @@ body {
   overflow-y: auto;
 }
 
-.modal-header {
+.order-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -436,14 +436,14 @@ body {
   border-bottom: 1px solid var(--gray-200);
 }
 
-.modal-title {
+.order-modal-title {
   font-size: 1.125rem;
   font-weight: 700;
   color: var(--gray-900);
   margin: 0;
 }
 
-.modal-close {
+.order-modal-close {
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -453,7 +453,7 @@ body {
   line-height: 1;
 }
 
-.modal-close:hover { color: var(--gray-700); }
+.order-modal-close:hover { color: var(--gray-700); }
 
 /* ─── Order Form ──────────────────────────────────────────────────────────── */
 
