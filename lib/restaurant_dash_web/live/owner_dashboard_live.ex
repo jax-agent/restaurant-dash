@@ -7,7 +7,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Orders, Drivers, Tenancy}
+  alias RestaurantDash.{Orders, Drivers, Tenancy, Analytics}
   alias RestaurantDash.Orders.Order
 
   @statuses Order.valid_statuses()
@@ -88,6 +88,12 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
               Menu
             </a>
             <a
+              href="/dashboard/analytics/sales"
+              class="text-gray-600 hover:text-gray-900 font-medium"
+            >
+              Analytics
+            </a>
+            <a
               href="/dashboard/settings"
               class="text-gray-600 hover:text-gray-900 font-medium"
             >
@@ -123,7 +129,79 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
       </header>
 
       <main class="max-w-7xl mx-auto px-6 py-8">
-        <%!-- Stats cards --%>
+        <%!-- Analytics Overview Cards --%>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <%!-- Today's Revenue --%>
+          <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <p class="text-sm text-gray-500">Today's Revenue</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {Analytics.format_money(@analytics.today_revenue)}
+            </p>
+            <div class="mt-2 flex items-center gap-1 text-xs">
+              {render_trend(@analytics.revenue_change)}
+              <span class="text-gray-400">vs yesterday</span>
+            </div>
+          </div>
+          <%!-- Today's Orders --%>
+          <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <p class="text-sm text-gray-500">Today's Orders</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{@analytics.today_orders}</p>
+            <div class="mt-2 flex items-center gap-1 text-xs">
+              {render_trend(@analytics.orders_change)}
+              <span class="text-gray-400">vs yesterday</span>
+            </div>
+          </div>
+          <%!-- Avg Order Value --%>
+          <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <p class="text-sm text-gray-500">Avg Order Value</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">
+              {Analytics.format_money(@analytics.today_avg_order)}
+            </p>
+            <p class="text-xs text-gray-400 mt-2">Today</p>
+          </div>
+          <%!-- Active Orders --%>
+          <div class="bg-white rounded-xl border border-gray-200 p-5">
+            <p class="text-sm text-gray-500">Active Orders</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{@analytics.active_orders}</p>
+            <%= if @analytics.avg_delivery_minutes do %>
+              <p class="text-xs text-gray-400 mt-2">
+                Avg delivery: {@analytics.avg_delivery_minutes}m today
+              </p>
+            <% else %>
+              <p class="text-xs text-gray-400 mt-2">In progress right now</p>
+            <% end %>
+          </div>
+        </div>
+
+        <%!-- Quick Analytics Links --%>
+        <div class="mb-8 flex gap-3 flex-wrap">
+          <a
+            href="/dashboard/analytics/sales"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            📈 Sales Report
+          </a>
+          <a
+            href="/dashboard/analytics/items"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            🍕 Popular Items
+          </a>
+          <a
+            href="/dashboard/analytics/delivery"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            🚗 Delivery Metrics
+          </a>
+          <a
+            href="/dashboard/analytics/customers"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            👥 Customer Insights
+          </a>
+        </div>
+
+        <%!-- Legacy Stats cards --%>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div class="bg-white rounded-xl border border-gray-200 p-5">
             <p class="text-sm text-gray-500">Today's Orders</p>
@@ -283,6 +361,15 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
   defp format_cents(cents) when is_integer(cents),
     do: :erlang.float_to_binary(cents / 100, decimals: 2)
 
+  defp render_trend(change) when change > 0,
+    do: Phoenix.HTML.raw("<span class=\"text-green-600 font-medium\">↑ #{change}%</span>")
+
+  defp render_trend(change) when change < 0,
+    do: Phoenix.HTML.raw("<span class=\"text-red-600 font-medium\">↓ #{abs(change)}%</span>")
+
+  defp render_trend(_),
+    do: Phoenix.HTML.raw("<span class=\"text-gray-400 font-medium\">→ 0%</span>")
+
   # ─── Private ──────────────────────────────────────────────────────────────
 
   defp load_stats(socket, restaurant_id) do
@@ -308,6 +395,9 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
     # Earnings report for restaurant
     earnings = Drivers.list_earnings_report(restaurant_id) |> Enum.take(20)
 
+    # Analytics overview
+    analytics = Analytics.dashboard_overview(restaurant_id)
+
     socket
     |> assign(:today_count, Orders.count_today(restaurant_id))
     |> assign(:total_count, Orders.count_total(restaurant_id))
@@ -315,6 +405,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
     |> assign(:recent_orders, recent)
     |> assign(:driver_ratings, driver_ratings)
     |> assign(:earnings, earnings)
+    |> assign(:analytics, analytics)
   end
 
   defp get_current_user(socket) do

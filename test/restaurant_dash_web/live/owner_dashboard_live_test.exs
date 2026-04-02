@@ -130,4 +130,39 @@ defmodule RestaurantDashWeb.OwnerDashboardLiveTest do
       assert html =~ "Settings"
     end
   end
+
+  describe "analytics cards" do
+    test "shows today's revenue card", %{conn: conn} do
+      {_restaurant, user} = create_owner_with_restaurant()
+      conn = log_in_user(conn, user)
+
+      {:ok, _lv, html} = live(conn, ~p"/dashboard")
+
+      assert html =~ "Today&#39;s Revenue" or html =~ "Today's Revenue"
+    end
+
+    test "shows analytics navigation links", %{conn: conn} do
+      {_restaurant, user} = create_owner_with_restaurant()
+      conn = log_in_user(conn, user)
+
+      {:ok, _lv, html} = live(conn, ~p"/dashboard")
+
+      assert html =~ "analytics" or html =~ "Analytics"
+    end
+
+    test "shows active orders count", %{conn: conn} do
+      {restaurant, user} = create_owner_with_restaurant()
+
+      Orders.create_order(%{
+        customer_name: "Alice Active",
+        items: ["Pizza"],
+        restaurant_id: restaurant.id
+      })
+
+      conn = log_in_user(conn, user)
+      {:ok, _lv, html} = live(conn, ~p"/dashboard")
+
+      assert html =~ "Active"
+    end
+  end
 end
