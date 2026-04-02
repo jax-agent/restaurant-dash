@@ -18,6 +18,19 @@ defmodule RestaurantDashWeb.Router do
     plug :accepts, ["json"]
   end
 
+  # Stripe webhook pipeline
+  pipeline :stripe_webhook do
+    plug :accepts, ["json"]
+  end
+
+  # Stripe webhooks (raw body required for signature verification)
+  scope "/api/webhooks", RestaurantDashWeb do
+    pipe_through :stripe_webhook
+
+    post "/stripe", WebhookController, :stripe
+    post "/stripe/mock", WebhookController, :mock
+  end
+
   scope "/", RestaurantDashWeb do
     pipe_through :browser
 
