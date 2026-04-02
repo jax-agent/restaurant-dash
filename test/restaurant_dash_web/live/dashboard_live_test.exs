@@ -1,0 +1,123 @@
+defmodule RestaurantDashWeb.DashboardLiveTest do
+  use RestaurantDashWeb.ConnCase, async: true
+
+  import Phoenix.LiveViewTest
+
+  alias RestaurantDash.Orders
+
+  describe "dashboard mount" do
+    test "renders the dashboard with restaurant name", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+
+      # Should show the restaurant name (default "Sal's Pizza")
+      assert html =~ "Sal&#39;s Pizza" or html =~ "Sal's Pizza"
+    end
+
+    test "renders kanban columns", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+
+      assert html =~ "New"
+      assert html =~ "Preparing"
+      assert html =~ "Out for Delivery"
+      assert html =~ "Delivered"
+    end
+
+    test "renders the New Order button", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+      assert html =~ "New Order"
+    end
+
+    test "renders the delivery map container", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+      assert html =~ "delivery-map"
+    end
+  end
+
+  describe "orders displayed" do
+    test "shows an order in the correct column", %{conn: conn} do
+      {:ok, _order} =
+        Orders.create_order(%{
+          customer_name: "TestCustomer",
+          items: ["Burger"],
+          status: "new"
+        })
+
+      {:ok, _lv, html} = live(conn, ~p"/")
+      assert html =~ "TestCustomer"
+    end
+
+    test "shows item count on order card", %{conn: conn} do
+      {:ok, _order} =
+        Orders.create_order(%{
+          customer_name: "ItemTestCustomer",
+          items: ["Pizza", "Soda", "Garlic Bread"],
+          status: "new"
+        })
+
+      {:ok, _lv, html} = live(conn, ~p"/")
+      assert html =~ "ItemTestCustomer"
+      assert html =~ "3 items"
+    end
+  end
+
+  describe "new order modal" do
+    test "opens modal when New Order button clicked", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/")
+
+      html = lv |> element("#new-order-btn") |> render_click()
+      assert html =~ "Place Order"
+    end
+
+    test "creates an order via form submission", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/orders/new")
+
+      # Fill and submit the form
+      html =
+        lv
+        |> form(".order-form",
+          order: %{
+            customer_name: "FormTest User",
+            phone: "(415) 555-9999",
+            delivery_address: "999 Test St, San Francisco, CA",
+            items_text: "Test Pizza\nTest Soda"
+          }
+        )
+        |> render_submit()
+
+      # Should redirect/close modal and show flash
+      assert html =~ "FormTest User" or html =~ "Order created"
+    end
+
+    test "shows validation errors for missing required fields", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/orders/new")
+
+      html =
+        lv
+        |> form(".order-form", order: %{customer_name: "", items_text: ""})
+        |> render_change()
+
+      assert html =~ "can&#39;t be blank" or html =~ "can't be blank"
+    end
+  end
+
+  describe "white-label config" do
+    test "shows restaurant name from branding config", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+      restaurant_name = RestaurantDash.Branding.restaurant_name()
+      # Match either raw name or HTML-encoded version (apostrophes become &#39;)
+      escaped_name = String.replace(restaurant_name, "'", "&#39;")
+      assert html =~ restaurant_name or html =~ escaped_name
+    end
+  end
+
+  describe "sidebar counts" do
+    test "renders status counts in sidebar", %{conn: conn} do
+      Orders.create_order(%{customer_name: "A1", items: ["x"], status: "new"})
+      Orders.create_order(%{customer_name: "A2", items: ["x"], status: "new"})
+
+      {:ok, _lv, html} = live(conn, ~p"/")
+      # The sidebar should show some counts
+      assert html =~ "sidebar-count"
+    end
+  end
+end

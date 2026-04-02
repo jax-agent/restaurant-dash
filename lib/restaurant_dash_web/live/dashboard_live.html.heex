@@ -1,0 +1,145 @@
+<%!-- White-label CSS variable injection --%>
+<style>
+  :root {
+    --primary: <%= @branding.primary_color %>;
+  }
+</style>
+
+<%!-- Header --%>
+<header class="dashboard-header" style="background-color: var(--primary);">
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="header-logo">{@branding.logo_url}</span>
+      <span class="header-name" id="restaurant-name">{@branding.restaurant_name}</span>
+    </div>
+    <button
+      class="btn-new-order"
+      phx-click="new_order"
+      id="new-order-btn"
+    >
+      + New Order
+    </button>
+  </div>
+</header>
+
+<%!-- Sidebar + Main --%>
+<div class="dashboard-layout">
+  <%!-- Sidebar --%>
+  <aside class="sidebar">
+    <h2 class="sidebar-title">Status</h2>
+    <%= for status <- @statuses do %>
+      <div class="sidebar-item">
+        <span class={["status-dot", "dot-#{status}"]}></span>
+        <span class="sidebar-label">{humanize_status(status)}</span>
+        <span class="sidebar-count">{Map.get(@status_counts, status, 0)}</span>
+      </div>
+    <% end %>
+  </aside>
+
+  <%!-- Kanban + Map --%>
+  <main class="main-content">
+    <%!-- Kanban board --%>
+    <section class="kanban-board" id="kanban-board">
+      <%= for status <- @statuses do %>
+        <div class="kanban-col" id={"col-#{status}"}>
+          <div class="kanban-col-header">
+            <span class={["status-badge", "badge-#{status}"]}>{humanize_status(status)}</span>
+            <span class="col-count">{length(Map.get(@orders, status, []))}</span>
+          </div>
+          <div class="kanban-cards">
+            <%= for order <- Map.get(@orders, status, []) do %>
+              <div class="order-card" id={"order-#{order.id}"}>
+                <div class="card-top">
+                  <span class="card-customer">{order.customer_name}</span>
+                  <span class={["status-badge", "badge-#{order.status}"]}>
+                    {humanize_status(order.status)}
+                  </span>
+                </div>
+                <div class="card-meta">
+                  <span class="card-items">
+                    {length(order.items)} item{if length(order.items) != 1, do: "s"}
+                  </span>
+                  <span class="card-time">{time_ago(order.inserted_at)}</span>
+                </div>
+                <div class="card-address">{order.delivery_address}</div>
+                <%= if order.phone do %>
+                  <div class="card-phone">{order.phone}</div>
+                <% end %>
+              </div>
+            <% end %>
+            <%= if Enum.empty?(Map.get(@orders, status, [])) do %>
+              <div class="empty-col">No orders</div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </section>
+
+    <%!-- Delivery Map --%>
+    <section class="map-section">
+      <h2 class="map-title">Live Delivery Map</h2>
+      <div
+        id="delivery-map"
+        phx-hook="DeliveryMap"
+        phx-update="ignore"
+        data-orders={Jason.encode!(@active_deliveries |> Enum.map(&order_map_data/1))}
+        data-primary-color={@branding.primary_color}
+        class="map-container"
+      >
+      </div>
+    </section>
+  </main>
+</div>
+
+<%!-- Flash Messages --%>
+<.flash kind={:info} flash={@flash} />
+<.flash kind={:error} flash={@flash} />
+
+<%!-- New Order Modal --%>
+<%= if @show_new_order_modal do %>
+  <div class="modal-overlay" phx-click="close_modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">New Order</h2>
+        <button class="modal-close" phx-click="close_modal">&times;</button>
+      </div>
+
+      <.form for={@form} phx-change="validate" phx-submit="save_order" class="order-form">
+        <div class="form-field">
+          <label class="form-label">Customer Name *</label>
+          <.input field={@form[:customer_name]} type="text" placeholder="Jane Smith" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Phone</label>
+          <.input field={@form[:phone]} type="tel" placeholder="(415) 555-0100" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Delivery Address</label>
+          <.input
+            field={@form[:delivery_address]}
+            type="text"
+            placeholder="123 Main St, San Francisco, CA"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Items (one per line) *</label>
+          <.input
+            field={@form[:items_text]}
+            type="textarea"
+            placeholder="Margherita Pizza\nGarlic Bread\nSoda"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" phx-click="close_modal">Cancel</button>
+          <button type="submit" class="btn-submit" style="background-color: var(--primary);">
+            Place Order
+          </button>
+        </div>
+      </.form>
+    </div>
+  </div>
+<% end %>

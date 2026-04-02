@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+_build
+deps
+
+# Test artifacts
+cover
+doc
+tmp
+
+# Node
+assets/node_modules
+
+# Secrets (never commit)
+.env
+*.secret
+
+# Fly artifacts (will be included via COPY)
+fly.toml
+
+# Dev/test config
+config/dev.exs
+config/test.exs
+priv/repo/seeds.exs
