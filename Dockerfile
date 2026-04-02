@@ -1,16 +1,16 @@
 # Find eligible builder and runner images on Docker Hub.
 # We use separate stages to keep the final image small.
 ARG ELIXIR_VERSION=1.19.5
-ARG OTP_VERSION=28.3.1
-ARG DEBIAN_VERSION=trixie-20250407-slim
+ARG OTP_VERSION=26.2.5.3
+ARG DEBIAN_VERSION=bullseye-20260316-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} as builder
 
-# install build dependencies
-RUN apt-get update -y && apt-get install -y build-essential git \
+# install build dependencies (including nodejs for npm)
+RUN apt-get update -y && apt-get install -y build-essential git nodejs npm \
     && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
@@ -38,13 +38,16 @@ COPY priv priv
 
 COPY lib lib
 
+# Compile the app first so phoenix-colocated hooks are generated in _build/
+RUN mix compile
+
 COPY assets assets
 
-# compile assets
-RUN mix assets.deploy
+# install node dependencies
+RUN cd assets && npm ci --prefix .
 
-# Compile the release
-RUN mix compile
+# compile assets (esbuild/tailwind)
+RUN mix assets.deploy
 
 # Changes to config/runtime.exs don't require recompiling the code
 COPY config/runtime.exs config/

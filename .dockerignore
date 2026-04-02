@@ -24,4 +24,3 @@ fly.toml
 # Dev/test config
 config/dev.exs
 config/test.exs
-priv/repo/seeds.exs
