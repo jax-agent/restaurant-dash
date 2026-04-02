@@ -35,6 +35,9 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     # Phase 10: Notification preferences
     field :notification_preferences, :map, default: %{}
 
+    # Phase 12: Loyalty program
+    field :loyalty_points_rate, :integer, default: 1
+
     # Phase 7: Delivery fee settings
     field :fee_mode, :string, default: "flat"
     field :base_delivery_fee, :integer, default: 299
@@ -71,7 +74,8 @@ defmodule RestaurantDash.Tenancy.Restaurant do
       :free_delivery_threshold,
       :driver_base_pay,
       :driver_per_mile_pay,
-      :notification_preferences
+      :notification_preferences,
+      :loyalty_points_rate
     ])
     |> validate_required([:name, :slug])
     |> validate_length(:name, min: 2, max: 100)

@@ -4,7 +4,8 @@ defmodule RestaurantDash.Orders.Order do
 
   # Full lifecycle: new → accepted → preparing → ready → assigned → picked_up → out_for_delivery → delivered
   # cancelled: terminal rejection state (can come from any active state)
-  @valid_statuses ~w(new accepted preparing ready assigned picked_up out_for_delivery delivered cancelled)
+  # scheduled: order placed for future delivery, activated by ScheduledOrderWorker
+  @valid_statuses ~w(new scheduled accepted preparing ready assigned picked_up out_for_delivery delivered cancelled)
 
   # Statuses that are shown on the KDS board (not terminal)
   @kds_statuses ~w(new accepted preparing ready)
@@ -59,8 +60,24 @@ defmodule RestaurantDash.Orders.Order do
     field :square_order_id, :string
     field :payment_provider, :string, default: "stripe"
 
+    # Phase 12: Promo codes & discounts
+    field :discount_amount, :integer, default: 0
+    field :promo_code, :string
+
+    # Phase 12: Loyalty program
+    field :loyalty_points_earned, :integer, default: 0
+
+    # Phase 12: Scheduled orders
+    field :scheduled_for, :utc_datetime
+
+    # Phase 12: Customer reviews
+    field :restaurant_rating, :integer
+    field :restaurant_review, :string
+    field :review_response, :string
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :driver, RestaurantDash.Accounts.User
+    belongs_to :location, RestaurantDash.Locations.Location
     has_many :order_items, RestaurantDash.Orders.OrderItem
 
     timestamps(type: :utc_datetime)
@@ -114,7 +131,11 @@ defmodule RestaurantDash.Orders.Order do
       :total_amount,
       :payment_status,
       :payment_intent_id,
-      :estimated_prep_minutes
+      :estimated_prep_minutes,
+      :discount_amount,
+      :promo_code,
+      :loyalty_points_earned,
+      :scheduled_for
     ])
     |> validate_required([
       :customer_name,
@@ -216,6 +237,29 @@ defmodule RestaurantDash.Orders.Order do
     |> cast(%{estimated_prep_minutes: minutes}, [:estimated_prep_minutes])
     |> validate_number(:estimated_prep_minutes, greater_than: 0)
   end
+
+  @doc "Changeset for submitting a restaurant review."
+  def restaurant_review_changeset(order, rating, review \\ "") do
+    sanitized_review = sanitize_text(review)
+
+    order
+    |> cast(%{restaurant_rating: rating, restaurant_review: sanitized_review}, [
+      :restaurant_rating,
+      :restaurant_review
+    ])
+    |> validate_number(:restaurant_rating, greater_than_or_equal_to: 1, less_than_or_equal_to: 5)
+  end
+
+  # Simple XSS sanitization — strip HTML tags
+  defp sanitize_text(nil), do: ""
+
+  defp sanitize_text(text) when is_binary(text) do
+    text
+    |> String.replace(~r/<[^>]*>/, "")
+    |> String.trim()
+  end
+
+  defp sanitize_text(_), do: ""
 
   defp timestamp_for_status("accepted"), do: :accepted_at
   defp timestamp_for_status("preparing"), do: :preparing_at

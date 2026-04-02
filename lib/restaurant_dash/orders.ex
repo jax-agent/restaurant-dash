@@ -346,6 +346,77 @@ defmodule RestaurantDash.Orders do
     |> Repo.all()
   end
 
+  # ─── Phase 12: Scheduled Orders ──────────────────────────────────────────────
+
+  @doc "List scheduled (future) orders for a restaurant."
+  def list_scheduled_orders(restaurant_id) do
+    Order
+    |> where([o], o.restaurant_id == ^restaurant_id and o.status == "scheduled")
+    |> order_by([o], asc: o.scheduled_for)
+    |> Repo.all()
+  end
+
+  @doc """
+  Validates that a scheduled_for datetime is at least min_minutes ahead and
+  within max_days in the future. Returns :ok or {:error, reason}.
+  """
+  def validate_scheduled_time(scheduled_for, min_minutes \\ 30, max_days \\ 7) do
+    now = DateTime.utc_now()
+    min_dt = DateTime.add(now, min_minutes * 60, :second)
+    max_dt = DateTime.add(now, max_days * 24 * 3600, :second)
+
+    cond do
+      DateTime.compare(scheduled_for, min_dt) == :lt ->
+        {:error, "Scheduled time must be at least #{min_minutes} minutes from now"}
+
+      DateTime.compare(scheduled_for, max_dt) == :gt ->
+        {:error, "Scheduled time cannot be more than #{max_days} days in the future"}
+
+      true ->
+        :ok
+    end
+  end
+
+  # ─── Phase 12: Reviews ────────────────────────────────────────────────────────
+
+  @doc "Submit a restaurant review for a delivered order."
+  def submit_restaurant_review(%Order{} = order, rating, review \\ "") do
+    order
+    |> Order.restaurant_review_changeset(rating, review)
+    |> Repo.update()
+    |> tap_broadcast(:order_updated)
+  end
+
+  @doc "Add owner response to a review."
+  def respond_to_review(%Order{} = order, response_text) do
+    order
+    |> Ecto.Changeset.change(%{review_response: response_text})
+    |> Repo.update()
+  end
+
+  @doc "Get average restaurant rating and count."
+  def get_restaurant_rating(restaurant_id) do
+    result =
+      Order
+      |> where([o], o.restaurant_id == ^restaurant_id and not is_nil(o.restaurant_rating))
+      |> select([o], {avg(o.restaurant_rating), count(o.id)})
+      |> Repo.one()
+
+    case result do
+      {nil, 0} -> {nil, 0}
+      {avg, count} -> {Decimal.to_float(avg), count}
+    end
+  end
+
+  @doc "List reviewed orders (with restaurant_rating) for a restaurant."
+  def list_reviews(restaurant_id, limit \\ 20) do
+    Order
+    |> where([o], o.restaurant_id == ^restaurant_id and not is_nil(o.restaurant_rating))
+    |> order_by([o], desc: o.delivered_at)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
   defp encode_modifiers(modifier_names) when is_list(modifier_names) do
     modifier_names
     |> Enum.map(fn

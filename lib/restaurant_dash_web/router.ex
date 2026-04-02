@@ -80,6 +80,13 @@ defmodule RestaurantDashWeb.Router do
 
     # Phase 9: Square webhook
     post "/api/webhooks/square", SquareWebhookController, :handle
+
+    # Phase 12: Advanced Features
+    live "/dashboard/promos", PromosLive, :index
+    live "/dashboard/loyalty", LoyaltyLive, :index
+    live "/dashboard/locations", LocationsLive, :index
+    live "/dashboard/hours", HoursLive, :index
+    live "/reviews", ReviewsLive, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
