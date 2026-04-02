@@ -1,6 +1,6 @@
 defmodule RestaurantDash.Orders do
   @moduledoc """
-  The Orders context.
+  The Orders context. All queries support optional restaurant scoping.
   """
 
   import Ecto.Query, warn: false
@@ -16,34 +16,84 @@ defmodule RestaurantDash.Orders do
     Phoenix.PubSub.subscribe(@pubsub, @topic)
   end
 
+  def subscribe(restaurant_id) when is_integer(restaurant_id) do
+    Phoenix.PubSub.subscribe(@pubsub, "orders:#{restaurant_id}")
+  end
+
   def broadcast(event, order) do
     Phoenix.PubSub.broadcast(@pubsub, @topic, {event, order})
+
+    if order.restaurant_id do
+      Phoenix.PubSub.broadcast(@pubsub, "orders:#{order.restaurant_id}", {event, order})
+    end
   end
 
   # ─── Queries ───────────────────────────────────────────────────────────────
 
-  def list_orders do
+  @doc "Lists orders, optionally scoped to a restaurant."
+  def list_orders(restaurant_id \\ nil) do
     Order
+    |> scope_by_restaurant(restaurant_id)
     |> order_by([o], asc: o.inserted_at)
     |> Repo.all()
   end
 
-  def list_orders_by_status(status) do
+  @doc "Lists orders by status, optionally scoped to a restaurant."
+  def list_orders_by_status(status, restaurant_id \\ nil) do
     Order
     |> where([o], o.status == ^status)
+    |> scope_by_restaurant(restaurant_id)
     |> order_by([o], asc: o.inserted_at)
     |> Repo.all()
   end
 
-  def list_active_deliveries do
+  @doc "Lists active deliveries (out_for_delivery), optionally scoped to a restaurant."
+  def list_active_deliveries(restaurant_id \\ nil) do
     Order
     |> where([o], o.status == "out_for_delivery")
+    |> scope_by_restaurant(restaurant_id)
     |> Repo.all()
   end
 
   def get_order!(id), do: Repo.get!(Order, id)
 
   def get_order(id), do: Repo.get(Order, id)
+
+  @doc "Gets an order, scoped to a restaurant to prevent cross-tenant access."
+  def get_order_for_restaurant!(id, restaurant_id) do
+    Order
+    |> where([o], o.id == ^id and o.restaurant_id == ^restaurant_id)
+    |> Repo.one!()
+  end
+
+  # ─── Stats ─────────────────────────────────────────────────────────────────
+
+  @doc "Count orders by status, optionally scoped to a restaurant."
+  def count_by_status(restaurant_id \\ nil) do
+    Order
+    |> scope_by_restaurant(restaurant_id)
+    |> group_by([o], o.status)
+    |> select([o], {o.status, count(o.id)})
+    |> Repo.all()
+    |> Map.new()
+  end
+
+  @doc "Count orders placed today, optionally scoped to a restaurant."
+  def count_today(restaurant_id \\ nil) do
+    today_start = DateTime.utc_now() |> DateTime.to_date() |> DateTime.new!(~T[00:00:00])
+
+    Order
+    |> scope_by_restaurant(restaurant_id)
+    |> where([o], o.inserted_at >= ^today_start)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  @doc "Total order count, optionally scoped to a restaurant."
+  def count_total(restaurant_id \\ nil) do
+    Order
+    |> scope_by_restaurant(restaurant_id)
+    |> Repo.aggregate(:count, :id)
+  end
 
   # ─── Mutations ─────────────────────────────────────────────────────────────
 
@@ -85,17 +135,13 @@ defmodule RestaurantDash.Orders do
     Order.changeset(order, attrs)
   end
 
-  # ─── Stats ─────────────────────────────────────────────────────────────────
-
-  def count_by_status do
-    Order
-    |> group_by([o], o.status)
-    |> select([o], {o.status, count(o.id)})
-    |> Repo.all()
-    |> Map.new()
-  end
-
   # ─── Private ───────────────────────────────────────────────────────────────
+
+  defp scope_by_restaurant(query, nil), do: query
+
+  defp scope_by_restaurant(query, restaurant_id) do
+    where(query, [o], o.restaurant_id == ^restaurant_id)
+  end
 
   defp tap_broadcast({:ok, order} = result, event) do
     # Guard against PubSub not being started (e.g. in Release.eval context)

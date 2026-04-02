@@ -14,6 +14,8 @@ defmodule RestaurantDash.Orders.Order do
     field :lat, :float
     field :lng, :float
 
+    belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
+
     timestamps(type: :utc_datetime)
   end
 
@@ -30,7 +32,8 @@ defmodule RestaurantDash.Orders.Order do
       :status,
       :delivery_address,
       :lat,
-      :lng
+      :lng,
+      :restaurant_id
     ])
     |> maybe_populate_items_from_text()
     |> validate_required([:customer_name])

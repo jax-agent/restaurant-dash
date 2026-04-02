@@ -60,21 +60,20 @@ defmodule RestaurantDashWeb.DashboardLiveTest do
     end
   end
 
-  describe "new order modal" do
-    test "opens modal when New Order button clicked", %{conn: conn} do
-      {:ok, lv, _html} = live(conn, ~p"/")
-
-      html = lv |> element("#new-order-btn") |> render_click()
-      assert html =~ "Place Order"
+  describe "new order link" do
+    test "has a New Order link on the dashboard", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/")
+      assert html =~ "New Order"
+      assert html =~ "/orders/new"
     end
 
-    test "creates an order via form submission", %{conn: conn} do
+    test "creates an order via form submission at /orders/new", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/orders/new")
 
-      # Fill and submit the form
-      html =
+      # Fill and submit the form — on success it redirects to "/"
+      result =
         lv
-        |> form(".order-form",
+        |> form("form",
           order: %{
             customer_name: "FormTest User",
             phone: "(415) 555-9999",
@@ -84,16 +83,17 @@ defmodule RestaurantDashWeb.DashboardLiveTest do
         )
         |> render_submit()
 
-      # Should redirect/close modal and show flash
-      assert html =~ "FormTest User" or html =~ "Order created"
+      # On success, result is a redirect tuple or HTML
+      assert match?({:error, {:live_redirect, %{to: "/"}}}, result) or
+               (is_binary(result) and (result =~ "FormTest User" or result =~ "Order created"))
     end
 
-    test "shows validation errors for missing required fields", %{conn: conn} do
+    test "shows validation errors for missing required fields at /orders/new", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/orders/new")
 
       html =
         lv
-        |> form(".order-form", order: %{customer_name: "", items_text: ""})
+        |> form("form", order: %{customer_name: "", items_text: ""})
         |> render_change()
 
       assert html =~ "can&#39;t be blank" or html =~ "can't be blank"
