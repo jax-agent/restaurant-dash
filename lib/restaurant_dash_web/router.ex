@@ -66,6 +66,12 @@ defmodule RestaurantDashWeb.Router do
 
     # Phase 8: Clover reconciliation dashboard
     live "/dashboard/clover/reconciliation", CloverReconciliationLive, :index
+
+    # Phase 9: Square OAuth callback
+    get "/dashboard/settings/square/callback", SquareOAuthController, :callback
+
+    # Phase 9: Square webhook
+    post "/api/webhooks/square", SquareWebhookController, :handle
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

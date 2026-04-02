@@ -55,6 +55,10 @@ defmodule RestaurantDash.Orders.Order do
     # Phase 8: Clover POS integration
     field :clover_order_id, :string
 
+    # Phase 9: Square POS integration
+    field :square_order_id, :string
+    field :payment_provider, :string, default: "stripe"
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :driver, RestaurantDash.Accounts.User
     has_many :order_items, RestaurantDash.Orders.OrderItem

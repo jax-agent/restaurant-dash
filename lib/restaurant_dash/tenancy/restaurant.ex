@@ -25,6 +25,13 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :clover_access_token, :string
     field :clover_connected_at, :utc_datetime
 
+    # Phase 9: Square POS integration
+    field :square_merchant_id, :string
+    field :square_access_token, :string
+    field :square_refresh_token, :string
+    field :square_location_id, :string
+    field :square_connected_at, :utc_datetime
+
     # Phase 7: Delivery fee settings
     field :fee_mode, :string, default: "flat"
     field :base_delivery_fee, :integer, default: 299

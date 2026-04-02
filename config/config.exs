@@ -76,7 +76,7 @@ config :phoenix, :json_library, Jason
 # Configure Oban
 config :restaurant_dash, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5, clover: 5],
+  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5, clover: 5, square: 5],
   repo: RestaurantDash.Repo,
   plugins: [
     {Oban.Plugins.Cron,
@@ -84,7 +84,9 @@ config :restaurant_dash, Oban,
        # Driver simulation every 30 seconds
        {"*/1 * * * *", RestaurantDash.Workers.DriverSimulationWorker},
        # Clover inventory sync every 5 minutes
-       {"*/5 * * * *", RestaurantDash.Workers.CloverInventorySyncWorker}
+       {"*/5 * * * *", RestaurantDash.Workers.CloverInventorySyncWorker},
+       # Square inventory sync every 5 minutes
+       {"*/5 * * * *", RestaurantDash.Workers.SquareInventorySyncWorker}
      ]}
   ]
 
@@ -100,6 +102,13 @@ config :restaurant_dash, :clover,
   app_id: System.get_env("CLOVER_APP_ID"),
   app_secret: System.get_env("CLOVER_APP_SECRET"),
   env: if(System.get_env("CLOVER_ENV") == "production", do: :production, else: :sandbox)
+
+# Square POS configuration (mock mode when no key configured)
+config :restaurant_dash, :square,
+  app_id: System.get_env("SQUARE_APP_ID"),
+  app_secret: System.get_env("SQUARE_APP_SECRET"),
+  webhook_signature_key: System.get_env("SQUARE_WEBHOOK_SIGNATURE_KEY"),
+  env: if(System.get_env("SQUARE_ENV") == "production", do: :production, else: :sandbox)
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

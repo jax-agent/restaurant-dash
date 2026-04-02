@@ -8,6 +8,7 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
 
   alias RestaurantDash.{Tenancy, Payments, Delivery}
   alias RestaurantDash.Integrations.Clover, as: CloverIntegration
+  alias RestaurantDash.Integrations.Square, as: SquareIntegration
   alias RestaurantDash.Delivery.DeliveryZone
 
   @impl true
@@ -41,6 +42,9 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
         # Handle Clover return
         clover_just_connected = params["clover_connected"] == "true"
 
+        # Handle Square return
+        square_just_connected = params["square_connected"] == "true"
+
         {:ok,
          socket
          |> assign(:current_user, current_user)
@@ -52,6 +56,8 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
          |> assign(:clover_just_connected, clover_just_connected)
          |> assign(:clover_connecting, false)
          |> assign(:clover_merchant_name, nil)
+         |> assign(:square_just_connected, square_just_connected)
+         |> assign(:square_connecting, false)
          |> assign(:zones, zones)
          |> assign(:zone_form, nil)
          |> assign(:editing_zone, nil)}
@@ -113,6 +119,31 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to disconnect Clover.")}
+    end
+  end
+
+  @impl true
+  def handle_event("connect-square", _params, socket) do
+    base_url = RestaurantDashWeb.Endpoint.url()
+    redirect_uri = base_url <> "/dashboard/settings/square/callback"
+
+    socket = assign(socket, :square_connecting, true)
+    url = SquareIntegration.authorization_url(redirect_uri)
+    {:noreply, redirect(socket, external: url)}
+  end
+
+  @impl true
+  def handle_event("disconnect-square", _params, socket) do
+    case SquareIntegration.disconnect(socket.assigns.restaurant) do
+      {:ok, restaurant} ->
+        {:noreply,
+         socket
+         |> assign(:restaurant, restaurant)
+         |> assign(:square_just_connected, false)
+         |> put_flash(:info, "Square disconnected.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to disconnect Square.")}
     end
   end
 
@@ -728,6 +759,87 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
                   Connecting to Clover...
                 <% else %>
                   Connect Clover POS
+                <% end %>
+              </button>
+            </div>
+          <% end %>
+        </div>
+
+        <%!-- Square POS Section --%>
+        <div class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-gray-800">Square POS Integration</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                Connect your Square account to sync menus, push orders, and accept Square payments
+              </p>
+            </div>
+            <%= if SquareIntegration.mock_mode?() do %>
+              <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-medium">
+                Demo Mode
+              </span>
+            <% end %>
+          </div>
+
+          <%= if SquareIntegration.connected?(@restaurant) do %>
+            <div class="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
+                ✓
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-blue-800">Square Connected</p>
+                <p class="text-xs text-blue-600 font-mono mt-0.5">
+                  Merchant ID: {@restaurant.square_merchant_id}
+                </p>
+                <%= if @restaurant.square_location_id do %>
+                  <p class="text-xs text-blue-500 mt-0.5">
+                    Location: {@restaurant.square_location_id}
+                  </p>
+                <% end %>
+                <%= if @restaurant.square_connected_at do %>
+                  <p class="text-xs text-blue-500 mt-0.5">
+                    Connected {@restaurant.square_connected_at |> Calendar.strftime("%b %d, %Y")}
+                  </p>
+                <% end %>
+              </div>
+              <button
+                phx-click="disconnect-square"
+                data-confirm="Disconnect Square? This will remove your Square POS integration."
+                class="px-3 py-1.5 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200"
+              >
+                Disconnect
+              </button>
+            </div>
+            <%= if @square_just_connected do %>
+              <p class="text-sm text-blue-600 mt-2">
+                🎉 Square connected successfully! You can now import your menu and push orders.
+              </p>
+            <% end %>
+          <% else %>
+            <div class="space-y-3">
+              <%= if SquareIntegration.mock_mode?() do %>
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p class="text-xs text-yellow-700">
+                    <strong>Demo Mode:</strong>
+                    No Square API keys configured. Connect will simulate the OAuth flow.
+                    Set <code class="font-mono">SQUARE_APP_ID</code>
+                    and <code class="font-mono">SQUARE_APP_SECRET</code>
+                    to enable real Square integration.
+                  </p>
+                </div>
+              <% end %>
+              <button
+                phx-click="connect-square"
+                disabled={@square_connecting}
+                class={"flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-sm #{if @square_connecting, do: "opacity-60 cursor-not-allowed"}"}
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
+                </svg>
+                <%= if @square_connecting do %>
+                  Connecting to Square...
+                <% else %>
+                  Connect Square POS
                 <% end %>
               </button>
             </div>
