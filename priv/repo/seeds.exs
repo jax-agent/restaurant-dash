@@ -1,8 +1,11 @@
-alias RestaurantDash.{Orders, Repo, Tenancy}
+alias RestaurantDash.{Menu, Orders, Repo, Tenancy}
+alias RestaurantDash.Menu.{Category, Item}
 alias RestaurantDash.Orders.Order
 alias RestaurantDash.Tenancy.Restaurant
 
 # Clear existing data (order matters due to FK constraints)
+Repo.delete_all(Item)
+Repo.delete_all(Category)
 Repo.delete_all(Order)
 Repo.delete_all(Restaurant)
 
@@ -23,7 +26,7 @@ Repo.delete_all(Restaurant)
     is_active: true
   })
 
-{:ok, _green_dragon} =
+{:ok, green_dragon} =
   Tenancy.create_restaurant(%{
     name: "Green Dragon Sushi",
     slug: "green-dragon",
@@ -39,6 +42,308 @@ Repo.delete_all(Restaurant)
   })
 
 IO.puts("✅ Seeded 2 demo restaurants")
+
+# ─── Sal's Pizza Menu ─────────────────────────────────────────────────────
+
+{:ok, sals_apps} =
+  Menu.create_category(%{
+    restaurant_id: sals.id,
+    name: "Appetizers",
+    description: "Start your meal right",
+    position: 10
+  })
+
+{:ok, sals_pizzas} =
+  Menu.create_category(%{
+    restaurant_id: sals.id,
+    name: "Pizzas",
+    description: "Hand-tossed New York-style",
+    position: 20
+  })
+
+{:ok, sals_drinks} =
+  Menu.create_category(%{
+    restaurant_id: sals.id,
+    name: "Drinks",
+    description: "Cold beverages",
+    position: 30
+  })
+
+# Appetizers
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_apps.id,
+    name: "Garlic Bread",
+    description: "Toasted bread with garlic butter",
+    price: 599,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_apps.id,
+    name: "Mozzarella Sticks",
+    description: "Fried mozzarella with marinara sauce",
+    price: 899,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_apps.id,
+    name: "Buffalo Wings",
+    description: "Crispy wings with your choice of sauce",
+    price: 1299,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_apps.id,
+    name: "Caesar Salad",
+    description: "Romaine lettuce, croutons, parmesan",
+    price: 999,
+    position: 40
+  })
+
+# Pizzas
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_pizzas.id,
+    name: "Margherita",
+    description: "San Marzano tomato, fresh mozzarella, basil",
+    price: 1499,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_pizzas.id,
+    name: "Pepperoni",
+    description: "Loaded with classic pepperoni",
+    price: 1699,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_pizzas.id,
+    name: "BBQ Chicken",
+    description: "Tangy BBQ sauce, grilled chicken, red onion",
+    price: 1899,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_pizzas.id,
+    name: "Veggie Supreme",
+    description: "Bell peppers, mushrooms, olives, onions",
+    price: 1699,
+    position: 40
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_pizzas.id,
+    name: "Meat Lovers",
+    description: "Pepperoni, sausage, ham, bacon",
+    price: 1999,
+    position: 50
+  })
+
+# Drinks
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_drinks.id,
+    name: "Coke",
+    description: "Classic Coca-Cola",
+    price: 299,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_drinks.id,
+    name: "Diet Coke",
+    description: "Coca-Cola Zero Sugar",
+    price: 299,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_drinks.id,
+    name: "San Pellegrino",
+    description: "Italian sparkling mineral water",
+    price: 399,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: sals.id,
+    menu_category_id: sals_drinks.id,
+    name: "Lemonade",
+    description: "Fresh-squeezed house lemonade",
+    price: 399,
+    position: 40
+  })
+
+IO.puts("✅ Seeded Sal's Pizza menu (3 categories, 13 items)")
+
+# ─── Green Dragon Sushi Menu ──────────────────────────────────────────────
+
+{:ok, gd_starters} =
+  Menu.create_category(%{
+    restaurant_id: green_dragon.id,
+    name: "Starters",
+    description: "Begin your journey",
+    position: 10
+  })
+
+{:ok, gd_rolls} =
+  Menu.create_category(%{
+    restaurant_id: green_dragon.id,
+    name: "Rolls",
+    description: "Handcrafted maki and specialty rolls",
+    position: 20
+  })
+
+{:ok, gd_entrees} =
+  Menu.create_category(%{
+    restaurant_id: green_dragon.id,
+    name: "Entrees",
+    description: "Full Japanese plates",
+    position: 30
+  })
+
+# Starters
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_starters.id,
+    name: "Edamame",
+    description: "Steamed salted soybeans",
+    price: 499,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_starters.id,
+    name: "Miso Soup",
+    description: "Traditional dashi broth with tofu and wakame",
+    price: 399,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_starters.id,
+    name: "Gyoza",
+    description: "Pan-fried pork and cabbage dumplings (6 pcs)",
+    price: 899,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_starters.id,
+    name: "Agedashi Tofu",
+    description: "Crispy tofu in savory dashi broth",
+    price: 799,
+    position: 40
+  })
+
+# Rolls
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_rolls.id,
+    name: "California Roll",
+    description: "Crab, avocado, cucumber",
+    price: 1099,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_rolls.id,
+    name: "Spicy Tuna Roll",
+    description: "Fresh tuna with spicy aioli",
+    price: 1299,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_rolls.id,
+    name: "Dragon Roll",
+    description: "Shrimp tempura, avocado on top",
+    price: 1599,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_rolls.id,
+    name: "Rainbow Roll",
+    description: "California roll topped with assorted fish",
+    price: 1799,
+    position: 40
+  })
+
+# Entrees
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_entrees.id,
+    name: "Salmon Teriyaki",
+    description: "Grilled salmon with house teriyaki glaze, rice",
+    price: 2199,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_entrees.id,
+    name: "Chicken Katsu",
+    description: "Crispy panko chicken cutlet, tonkatsu sauce",
+    price: 1899,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: green_dragon.id,
+    menu_category_id: gd_entrees.id,
+    name: "Ramen",
+    description: "Rich tonkotsu broth, pork belly, soft egg, nori",
+    price: 1699,
+    position: 30
+  })
+
+IO.puts("✅ Seeded Green Dragon Sushi menu (3 categories, 11 items)")
 
 # ─── Demo Orders (associated with Sal's Pizza) ────────────────────────────
 
