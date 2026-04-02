@@ -3,7 +3,7 @@ defmodule RestaurantDashWeb.DashboardLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Branding, Orders, Tenancy}
+  alias RestaurantDash.{Branding, Orders, Payments, Tenancy}
   alias RestaurantDash.Orders.Order
 
   @statuses Order.valid_statuses()
@@ -39,6 +39,27 @@ defmodule RestaurantDashWeb.DashboardLive do
   @impl true
   def handle_params(_params, _uri, socket) do
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("refund_order", %{"id" => id}, socket) do
+    order = Orders.get_order!(id)
+
+    case Payments.refund_order(order) do
+      {:ok, _updated} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Order for #{order.customer_name} has been refunded.")
+         |> reload_orders()}
+
+      {:error, reason} ->
+        {:noreply,
+         put_flash(
+           socket,
+           :error,
+           "Refund failed: #{reason}"
+         )}
+    end
   end
 
   @impl true

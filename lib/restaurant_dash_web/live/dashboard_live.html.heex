@@ -63,6 +63,22 @@
                   <a href={"/orders/#{order.id}/edit"} class="card-action-btn card-edit-btn">
                     ✏️ Edit
                   </a>
+                  <%= if order.payment_intent_id && order.payment_status not in ["refunded", "failed"] do %>
+                    <button
+                      phx-click="refund_order"
+                      phx-value-id={order.id}
+                      data-confirm={"Refund order for #{order.customer_name}? This cannot be undone."}
+                      class="card-action-btn"
+                      style="color: #d97706; border-color: #d97706;"
+                    >
+                      💸 Refund
+                    </button>
+                  <% end %>
+                  <%= if order.payment_status == "refunded" do %>
+                    <span class="card-action-btn" style="color: #6b7280; cursor: default;">
+                      ✓ Refunded
+                    </span>
+                  <% end %>
                   <button
                     phx-click="delete_order"
                     phx-value-id={order.id}
