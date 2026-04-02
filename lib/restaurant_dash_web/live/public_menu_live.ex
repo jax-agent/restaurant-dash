@@ -9,7 +9,8 @@ defmodule RestaurantDashWeb.PublicMenuLive do
   """
   use RestaurantDashWeb, :live_view
 
-  alias RestaurantDash.{Menu, Tenancy}
+  alias RestaurantDash.{Cart, Menu, Tenancy}
+  alias RestaurantDashWeb.CartHelpers
 
   @impl true
   def mount(params, session, socket) do
@@ -22,20 +23,26 @@ defmodule RestaurantDashWeb.PublicMenuLive do
 
     case restaurant do
       nil ->
-        {:ok,
-         socket
-         |> assign(:restaurant, nil)
-         |> assign(:menu, [])
-         |> assign(:not_found, true)}
+        socket =
+          socket
+          |> assign(:restaurant, nil)
+          |> assign(:menu, [])
+          |> assign(:not_found, true)
+          |> CartHelpers.mount_cart(session)
+
+        {:ok, socket}
 
       restaurant ->
         menu = Menu.get_full_menu(restaurant.id)
 
-        {:ok,
-         socket
-         |> assign(:restaurant, restaurant)
-         |> assign(:menu, menu)
-         |> assign(:not_found, false)}
+        socket =
+          socket
+          |> assign(:restaurant, restaurant)
+          |> assign(:menu, menu)
+          |> assign(:not_found, false)
+          |> CartHelpers.mount_cart(session, restaurant.id)
+
+        {:ok, socket}
     end
   end
 
@@ -71,7 +78,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
       <div class="min-h-screen bg-gray-50">
         <%!-- Header / Hero --%>
         <header
-          class="text-white py-10 px-6 text-center"
+          class="text-white py-10 px-6 text-center relative"
           style={"background-color: #{@restaurant.primary_color}"}
         >
           <h1 class="text-3xl font-bold">{@restaurant.name}</h1>
@@ -82,6 +89,20 @@ defmodule RestaurantDashWeb.PublicMenuLive do
             <p class="mt-1 text-white/70 text-xs">
               {@restaurant.address}, {@restaurant.city}, {@restaurant.state}
             </p>
+          <% end %>
+
+          <%!-- Cart Button (top-right) --%>
+          <%= unless Cart.empty?(@cart) do %>
+            <a
+              href="/checkout"
+              class="absolute top-4 right-6 flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+            >
+              <span>🛒</span>
+              <span class="font-semibold">{Cart.item_count(@cart)}</span>
+              <span class="text-white/80">
+                {format_price(Cart.calculate_totals(@cart).subtotal)}
+              </span>
+            </a>
           <% end %>
         </header>
 
@@ -191,6 +212,22 @@ defmodule RestaurantDashWeb.PublicMenuLive do
             Powered by <span class="font-medium">RestaurantDash</span>
           </p>
         </footer>
+
+        <%!-- Sticky Cart Bar (shows when cart has items) --%>
+        <%= unless Cart.empty?(@cart) do %>
+          <% totals = Cart.calculate_totals(@cart) %>
+          <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+            <a
+              href="/checkout"
+              class="flex items-center gap-4 text-white font-semibold px-8 py-4 rounded-full shadow-2xl hover:opacity-90 transition-all"
+              style={"background-color: #{@restaurant.primary_color}"}
+            >
+              <span>🛒 {Cart.item_count(@cart)} item{if Cart.item_count(@cart) != 1, do: "s"}</span>
+              <span class="opacity-60">·</span>
+              <span>View Cart — {format_price(totals.total)}</span>
+            </a>
+          </div>
+        <% end %>
       </div>
     <% end %>
     """

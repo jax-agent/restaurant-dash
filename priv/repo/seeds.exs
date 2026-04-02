@@ -1,9 +1,10 @@
 alias RestaurantDash.{Menu, Orders, Repo, Tenancy}
 alias RestaurantDash.Menu.{Category, Item, Modifier, ModifierGroup}
-alias RestaurantDash.Orders.Order
+alias RestaurantDash.Orders.{Order, OrderItem}
 alias RestaurantDash.Tenancy.Restaurant
 
 # Clear existing data (order matters due to FK constraints)
+Repo.delete_all(OrderItem)
 Repo.delete_all(Modifier)
 Repo.delete_all(ModifierGroup)
 Repo.delete_all(Item)
