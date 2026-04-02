@@ -7,6 +7,47 @@ defmodule RestaurantDashWeb.UserAuth do
   alias RestaurantDash.Accounts
   alias RestaurantDash.Accounts.Scope
 
+  # ─── LiveView on_mount hooks ─────────────────────────────────────────────
+
+  @doc """
+  on_mount hook: fetches the current user from session and assigns it to socket.
+  Use in LiveViews for authentication.
+
+  Usage:
+      on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
+  """
+  def on_mount(:mount_current_user, _params, session, socket) do
+    {:cont, mount_current_user(socket, session)}
+  end
+
+  def on_mount(:require_authenticated_user, _params, session, socket) do
+    socket = mount_current_user(socket, session)
+
+    if socket.assigns.current_scope && socket.assigns.current_scope.user do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(:error, "You must be logged in to access this page.")
+        |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:halt, socket}
+    end
+  end
+
+  defp mount_current_user(socket, session) do
+    Phoenix.Component.assign_new(socket, :current_scope, fn ->
+      if user_token = session["user_token"] do
+        case Accounts.get_user_by_session_token(user_token) do
+          {user, _token_inserted_at} -> Scope.for_user(user)
+          nil -> Scope.for_user(nil)
+        end
+      else
+        Scope.for_user(nil)
+      end
+    end)
+  end
+
   # Make the remember me cookie valid for 14 days. This should match
   # the session validity setting in UserToken.
   @max_cookie_age_in_days 14

@@ -23,6 +23,8 @@ config :restaurant_dash, RestaurantDashWeb.Endpoint,
   secret_key_base: "gTCuWl7DnV8bhXrNMx6vuLCT9IeJEsGGqyZ//k/ycEKj5ivzGFefHP5r/AdWTYS5",
   server: false
 
+config :restaurant_dash, :sql_sandbox, true
+
 # In test we don't send emails
 config :restaurant_dash, RestaurantDash.Mailer, adapter: Swoosh.Adapters.Test
 

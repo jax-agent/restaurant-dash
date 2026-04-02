@@ -1,6 +1,10 @@
 defmodule RestaurantDashWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :restaurant_dash
 
+  if Application.compile_env(:restaurant_dash, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox
+  end
+
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
@@ -34,6 +38,10 @@ defmodule RestaurantDashWeb.Endpoint do
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
     plug Phoenix.Ecto.CheckRepoStatus, otp_app: :restaurant_dash
+  end
+
+  if Application.compile_env(:restaurant_dash, :sql_sandbox) do
+    plug Phoenix.Ecto.SQL.Sandbox
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

@@ -22,6 +22,12 @@ defmodule RestaurantDashWeb.Router do
 
     live "/", DashboardLive, :index
     live "/signup", OnboardingLive, :new
+
+    # Owner dashboard
+    live "/dashboard", OwnerDashboardLive, :index
+    live "/dashboard/orders", DashboardLive, :index
+    live "/dashboard/settings", RestaurantSettingsLive, :edit
+
     live "/orders/new", OrderFormLive, :new
     live "/orders/:id/edit", OrderFormLive, :edit
   end
