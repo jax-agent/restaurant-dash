@@ -122,8 +122,9 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                 <% else %>
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <%= for item <- items do %>
-                      <div
-                        class={"bg-white rounded-xl border border-gray-200 overflow-hidden flex gap-4 p-4 #{unless item.is_available, do: "opacity-70"}"}
+                      <a
+                        href={"/menu/#{item.id}?restaurant_slug=#{@restaurant.slug}"}
+                        class={"block bg-white rounded-xl border border-gray-200 overflow-hidden flex gap-4 p-4 hover:shadow-md transition-shadow #{unless item.is_available, do: "opacity-70"}"}
                         id={"item-#{item.id}"}
                       >
                         <%!-- Image --%>
@@ -175,7 +176,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </a>
                     <% end %>
                   </div>
                 <% end %>

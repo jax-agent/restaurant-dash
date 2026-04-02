@@ -23,6 +23,7 @@ defmodule RestaurantDashWeb.Router do
 
     live "/", LandingLive, :index
     live "/menu", PublicMenuLive, :index
+    live "/menu/:id", ItemDetailLive, :show
     live "/signup", OnboardingLive, :new
 
     # Owner dashboard
