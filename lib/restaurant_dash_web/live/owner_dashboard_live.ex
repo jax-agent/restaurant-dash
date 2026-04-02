@@ -229,9 +229,12 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
   end
 
   defp humanize_status("new"), do: "New"
+  defp humanize_status("accepted"), do: "Accepted"
   defp humanize_status("preparing"), do: "Preparing"
+  defp humanize_status("ready"), do: "Ready"
   defp humanize_status("out_for_delivery"), do: "Out for Delivery"
   defp humanize_status("delivered"), do: "Delivered"
+  defp humanize_status("cancelled"), do: "Cancelled"
   defp humanize_status(s), do: s
 
   defp status_badge_class("new"), do: "bg-blue-100 text-blue-700"

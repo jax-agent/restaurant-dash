@@ -10,6 +10,7 @@ defmodule RestaurantDash.Menu.Item do
     field :position, :integer, default: 0
     field :is_active, :boolean, default: true
     field :is_available, :boolean, default: true
+    field :prep_time_minutes, :integer, default: 5
 
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :category, RestaurantDash.Menu.Category, foreign_key: :menu_category_id
@@ -33,12 +34,14 @@ defmodule RestaurantDash.Menu.Item do
       :position,
       :is_active,
       :is_available,
+      :prep_time_minutes,
       :restaurant_id,
       :menu_category_id
     ])
     |> validate_required([:name, :price, :restaurant_id])
     |> validate_length(:name, min: 1, max: 200)
     |> validate_number(:price, greater_than_or_equal_to: 0)
+    |> validate_number(:prep_time_minutes, greater_than: 0)
     |> assoc_constraint(:restaurant)
     |> assoc_constraint(:category)
   end

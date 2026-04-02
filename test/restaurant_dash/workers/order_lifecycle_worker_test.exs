@@ -59,6 +59,33 @@ defmodule RestaurantDash.Workers.OrderLifecycleWorkerTest do
     end
   end
 
+  describe "perform/1 - kds_managed orders" do
+    test "does not auto-transition a kds_managed order" do
+      {:ok, order} = Orders.create_order(%{customer_name: "Alice", items: ["Pizza"]})
+
+      # Simulate KDS taking over by setting kds_managed via changeset
+      alias RestaurantDash.Repo
+      alias RestaurantDash.Orders.Order
+
+      {:ok, order} =
+        order
+        |> Ecto.Changeset.change(%{kds_managed: true, status: "accepted"})
+        |> Repo.update()
+
+      assert order.kds_managed == true
+      assert order.status == "accepted"
+
+      # Lifecycle worker should skip this — from_status "new" doesn't match, but
+      # even if it did match "accepted", kds_managed would prevent transition
+      job = %Oban.Job{args: %{"order_id" => order.id, "from_status" => "accepted"}}
+      assert :ok = OrderLifecycleWorker.perform(job)
+
+      # Status should remain accepted (not auto-transitioned)
+      updated = Orders.get_order!(order.id)
+      assert updated.status == "accepted"
+    end
+  end
+
   describe "schedule_for/1" do
     test "schedules a job for a new order" do
       {:ok, order} = Orders.create_order(%{customer_name: "Alice", items: ["Pizza"]})

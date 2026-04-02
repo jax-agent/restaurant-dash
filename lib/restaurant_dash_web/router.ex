@@ -44,6 +44,7 @@ defmodule RestaurantDashWeb.Router do
     live "/dashboard/orders", DashboardLive, :index
     live "/dashboard/menu", MenuManagementLive, :index
     live "/dashboard/settings", RestaurantSettingsLive, :edit
+    live "/dashboard/kitchen", KitchenLive, :index
 
     live "/orders/new", OrderFormLive, :new
     live "/orders/:id/edit", OrderFormLive, :edit

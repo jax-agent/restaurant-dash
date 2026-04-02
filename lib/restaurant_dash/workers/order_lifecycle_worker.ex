@@ -27,7 +27,8 @@ defmodule RestaurantDash.Workers.OrderLifecycleWorker do
         :ok
 
       order ->
-        if order.status == from_status do
+        # Skip auto-transition if KDS staff are manually managing this order
+        if order.status == from_status and not order.kds_managed do
           {to_status, _delay} = @transitions[from_status]
           {:ok, updated_order} = Orders.transition_order(order, to_status)
 

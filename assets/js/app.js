@@ -25,10 +25,14 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/restaurant_dash"
 import topbar from "../vendor/topbar"
 import DeliveryMap from "./hooks/delivery_map"
+import KdsKeyboard from "./hooks/kds_keyboard"
+import KdsAudio from "./hooks/kds_audio"
 
 const Hooks = {
   ...colocatedHooks,
   DeliveryMap,
+  KdsKeyboard,
+  KdsAudio,
 }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")

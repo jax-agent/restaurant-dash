@@ -2,7 +2,12 @@ defmodule RestaurantDash.Orders.Order do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @valid_statuses ~w(new preparing out_for_delivery delivered)
+  # Full lifecycle: new → accepted → preparing → ready → out_for_delivery → delivered
+  # cancelled: terminal rejection state (can come from any active state)
+  @valid_statuses ~w(new accepted preparing ready out_for_delivery delivered cancelled)
+
+  # Statuses that are shown on the KDS board (not terminal)
+  @kds_statuses ~w(new accepted preparing ready)
 
   schema "orders" do
     field :customer_name, :string
@@ -27,6 +32,13 @@ defmodule RestaurantDash.Orders.Order do
     field :payment_status, :string, default: "pending"
     field :payment_intent_id, :string
 
+    # Phase 5: KDS fields
+    field :accepted_at, :utc_datetime
+    field :preparing_at, :utc_datetime
+    field :ready_at, :utc_datetime
+    field :estimated_prep_minutes, :integer
+    field :kds_managed, :boolean, default: false
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     has_many :order_items, RestaurantDash.Orders.OrderItem
 
@@ -34,6 +46,7 @@ defmodule RestaurantDash.Orders.Order do
   end
 
   def valid_statuses, do: @valid_statuses
+  def kds_statuses, do: @kds_statuses
 
   @doc false
   def changeset(order, attrs) do
@@ -79,7 +92,8 @@ defmodule RestaurantDash.Orders.Order do
       :tip_amount,
       :total_amount,
       :payment_status,
-      :payment_intent_id
+      :payment_intent_id,
+      :estimated_prep_minutes
     ])
     |> validate_required([
       :customer_name,
@@ -99,20 +113,45 @@ defmodule RestaurantDash.Orders.Order do
     |> validate_inclusion(:status, @valid_statuses)
   end
 
+  @doc "Changeset for KDS status transitions — sets status + timestamp + kds_managed flag."
+  def kds_transition_changeset(order, status) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    timestamp_field = timestamp_for_status(status)
+
+    attrs =
+      %{status: status, kds_managed: true}
+      |> then(fn a ->
+        if timestamp_field, do: Map.put(a, timestamp_field, now), else: a
+      end)
+
+    order
+    |> cast(attrs, [:status, :kds_managed, :accepted_at, :preparing_at, :ready_at])
+    |> validate_inclusion(:status, @valid_statuses)
+  end
+
   def position_changeset(order, lat, lng) do
     order
     |> cast(%{lat: lat, lng: lng}, [:lat, :lng])
   end
 
+  def prep_time_changeset(order, minutes) do
+    order
+    |> cast(%{estimated_prep_minutes: minutes}, [:estimated_prep_minutes])
+    |> validate_number(:estimated_prep_minutes, greater_than: 0)
+  end
+
+  defp timestamp_for_status("accepted"), do: :accepted_at
+  defp timestamp_for_status("preparing"), do: :preparing_at
+  defp timestamp_for_status("ready"), do: :ready_at
+  defp timestamp_for_status(_), do: nil
+
   defp validate_items_present(changeset) do
-    # Only validate items present if NOT using cart_order_changeset path
-    # (cart orders have items via order_items association)
     items = get_field(changeset, :items, [])
 
     if is_list(items) and length(items) > 0 do
       changeset
     else
-      # Don't error if we have a restaurant_id AND explicit empty (cart flow sets [])
       case get_change(changeset, :items) do
         [] -> changeset
         _ -> add_error(changeset, :items, "can't be blank")
