@@ -17,7 +17,9 @@ Competes with ChowNow/Olo but built on modern Elixir/Phoenix with real-time ever
 - **Real-time:** Phoenix PubSub + Channels (already built-in)
 - **Payments:** Stripe Connect (marketplace model — we collect, restaurants get paid)
 - **POS:** Clover REST API, Square API (Catalog + Orders + Payments)
-- **Delivery:** DoorDash Drive API, own-fleet with driver app
+- **Delivery:** Own-fleet only (white-label — NO DoorDash/Uber dependency)
+- **Geospatial:** PostGIS (delivery zones, driver tracking, distance calc)
+- **Routing:** OSRM or GraphHopper (self-hosted route optimization)
 - **Maps:** Leaflet + OpenStreetMap (free), Google Maps API for geocoding
 - **SMS:** Twilio (order notifications)
 - **Email:** SendGrid or Resend (receipts, confirmations)
@@ -91,15 +93,22 @@ Slices:
 6. **Proof of delivery** — photo capture on delivery
 7. **Driver earnings** — track per-delivery pay + tips
 
-### Phase 7: DoorDash Drive Integration
-**Goal:** Use DoorDash's driver network as overflow/default delivery
+### Phase 7: Own-Fleet Delivery Engine (White-Label — NO third-party drivers)
+**Goal:** Full delivery logistics built in-house. This IS the product — not a DoorDash wrapper.
 
 Slices:
-1. **DoorDash Drive client** — JWT auth, sandbox setup
-2. **Delivery quotes** — get price/ETA before customer checks out
-3. **Create deliveries** — push accepted orders to DoorDash
-4. **Webhook handler** — track Dasher assignment, pickup, delivery
-5. **Fallback logic** — own fleet first → DoorDash if no driver available
+1. **Driver onboarding** — driver signup, document upload (license, insurance), approval flow
+2. **Shift scheduling** — drivers set availability windows, owner manages schedule
+3. **Auto-dispatch engine** — Oban worker that assigns orders to nearest available driver (PostGIS distance calc)
+4. **Manual dispatch override** — owner/staff can reassign drivers
+5. **Driver mobile app (web)** — mobile-optimized LiveView: pending deliveries, accept/reject, navigation link, status updates (picked up → en route → delivered)
+6. **Real-time GPS tracking** — driver reports location via WebSocket/Channel, stored in PostGIS, pushed to customer tracking page
+7. **Route optimization** — multi-stop routing when driver has multiple active deliveries (OSRM or GraphHopper, self-hosted)
+8. **Delivery zones** — PostGIS polygon-based zones per restaurant, distance-based fee calculation
+9. **Proof of delivery** — photo capture + signature pad on delivery
+10. **Driver earnings & payouts** — per-delivery pay + tips tracking, payout reports
+11. **Driver ratings** — customer rates driver, low-rating alerts to owner
+12. **Surge pricing** — dynamic delivery fee based on demand/driver availability
 
 ### Phase 8: POS Integration — Clover
 **Goal:** Sync with Clover POS (menu, orders, payments)
