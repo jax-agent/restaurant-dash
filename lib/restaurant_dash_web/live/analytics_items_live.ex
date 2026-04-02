@@ -175,7 +175,10 @@ defmodule RestaurantDashWeb.AnalyticsItemsLive do
     socket
     |> assign(:top_items, Analytics.top_items(restaurant_id, start_dt, end_dt))
     |> assign(:least_popular, Analytics.least_popular_items(restaurant_id, start_dt, end_dt))
-    |> assign(:revenue_by_category, Analytics.revenue_by_category(restaurant_id, start_dt, end_dt))
+    |> assign(
+      :revenue_by_category,
+      Analytics.revenue_by_category(restaurant_id, start_dt, end_dt)
+    )
   end
 
   defp get_current_user(socket) do

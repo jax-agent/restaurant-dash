@@ -63,7 +63,10 @@ defmodule RestaurantDashWeb.AnalyticsItemsLiveTest do
       {_restaurant, user} = create_owner()
       conn = log_in_user(conn, user)
       {:ok, lv, _html} = live(conn, ~p"/dashboard/analytics/items")
-      html = lv |> element("[phx-click='set_range'][phx-value-range='this_week']") |> render_click()
+
+      html =
+        lv |> element("[phx-click='set_range'][phx-value-range='this_week']") |> render_click()
+
       assert html =~ "Top 10 Items"
     end
   end

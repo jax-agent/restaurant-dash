@@ -252,10 +252,8 @@ defmodule RestaurantDash.Analytics do
       |> where([o], o.inserted_at >= ^start_dt and o.inserted_at <= ^end_dt)
       |> select([o], %{
         total: count(o.id),
-        delivered:
-          sum(fragment("CASE WHEN ? = 'delivered' THEN 1 ELSE 0 END", o.status)),
-        cancelled:
-          sum(fragment("CASE WHEN ? = 'cancelled' THEN 1 ELSE 0 END", o.status))
+        delivered: sum(fragment("CASE WHEN ? = 'delivered' THEN 1 ELSE 0 END", o.status)),
+        cancelled: sum(fragment("CASE WHEN ? = 'cancelled' THEN 1 ELSE 0 END", o.status))
       })
       |> Repo.one()
 
@@ -362,7 +360,10 @@ defmodule RestaurantDash.Analytics do
     active_count =
       Order
       |> where([o], o.restaurant_id == ^restaurant_id)
-      |> where([o], o.status in ~w(new accepted preparing ready assigned picked_up out_for_delivery))
+      |> where(
+        [o],
+        o.status in ~w(new accepted preparing ready assigned picked_up out_for_delivery)
+      )
       |> select([o], count(o.id))
       |> Repo.one()
 

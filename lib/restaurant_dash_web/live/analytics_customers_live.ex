@@ -179,7 +179,9 @@ defmodule RestaurantDashWeb.AnalyticsCustomersLive do
   defp mask_email(email) do
     case String.split(email, "@") do
       [local, domain] when byte_size(local) > 2 ->
-        masked = String.first(local) <> String.duplicate("*", byte_size(local) - 2) <> String.last(local)
+        masked =
+          String.first(local) <> String.duplicate("*", byte_size(local) - 2) <> String.last(local)
+
         "#{masked}@#{domain}"
 
       _ ->

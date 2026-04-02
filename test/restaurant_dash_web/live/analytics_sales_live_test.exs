@@ -67,7 +67,9 @@ defmodule RestaurantDashWeb.AnalyticsSalesLiveTest do
 
       {:ok, lv, _html} = live(conn, ~p"/dashboard/analytics/sales")
 
-      html = lv |> element("[phx-click='set_range'][phx-value-range='this_week']") |> render_click()
+      html =
+        lv |> element("[phx-click='set_range'][phx-value-range='this_week']") |> render_click()
+
       assert html =~ "Revenue" or html =~ "Orders"
     end
 
@@ -143,6 +145,7 @@ defmodule RestaurantDashWeb.AnalyticsSalesLiveTest do
       })
 
       conn = get(conn, ~p"/dashboard/analytics/sales/export")
+
       assert response_content_type(conn, :csv) =~ "text/csv" or
                get_resp_header(conn, "content-type") |> List.first() =~ "text/csv" or
                get_resp_header(conn, "content-disposition") |> List.first() =~ "attachment"
