@@ -5,55 +5,6 @@
   }
 </style>
 
-<%!-- New Order Modal (rendered FIRST so it's not inside dashboard stacking context) --%>
-<%= if @show_new_order_modal do %>
-  <div class="modal-overlay" phx-click="close_modal">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <h2 class="modal-title">New Order</h2>
-        <button class="modal-close" phx-click="close_modal">&times;</button>
-      </div>
-
-      <.form for={@form} phx-change="validate" phx-submit="save_order" class="order-form">
-        <div class="form-field">
-          <label class="form-label">Customer Name *</label>
-          <.input field={@form[:customer_name]} type="text" placeholder="Jane Smith" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Phone</label>
-          <.input field={@form[:phone]} type="tel" placeholder="(415) 555-0100" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Delivery Address</label>
-          <.input
-            field={@form[:delivery_address]}
-            type="text"
-            placeholder="123 Main St, San Francisco, CA"
-          />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Items (one per line) *</label>
-          <.input
-            field={@form[:items_text]}
-            type="textarea"
-            placeholder="Margherita Pizza\nGarlic Bread\nSoda"
-          />
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" phx-click="close_modal">Cancel</button>
-          <button type="submit" class="btn-submit" style="background-color: var(--primary);">
-            Place Order
-          </button>
-        </div>
-      </.form>
-    </div>
-  </div>
-<% end %>
-
 <%!-- Header --%>
 <header class="dashboard-header" style="background-color: var(--primary);">
   <div class="header-inner">
@@ -143,3 +94,52 @@
 <%!-- Flash Messages --%>
 <.flash kind={:info} flash={@flash} />
 <.flash kind={:error} flash={@flash} />
+
+<%!-- New Order Modal --%>
+<%= if @show_new_order_modal do %>
+  <div class="modal-overlay" phx-click="close_modal">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">New Order</h2>
+        <button class="modal-close" phx-click="close_modal">&times;</button>
+      </div>
+
+      <.form for={@form} phx-change="validate" phx-submit="save_order" class="order-form">
+        <div class="form-field">
+          <label class="form-label">Customer Name *</label>
+          <.input field={@form[:customer_name]} type="text" placeholder="Jane Smith" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Phone</label>
+          <.input field={@form[:phone]} type="tel" placeholder="(415) 555-0100" />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Delivery Address</label>
+          <.input
+            field={@form[:delivery_address]}
+            type="text"
+            placeholder="123 Main St, San Francisco, CA"
+          />
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Items (one per line) *</label>
+          <.input
+            field={@form[:items_text]}
+            type="textarea"
+            placeholder="Margherita Pizza\nGarlic Bread\nSoda"
+          />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" phx-click="close_modal">Cancel</button>
+          <button type="submit" class="btn-submit" style="background-color: var(--primary);">
+            Place Order
+          </button>
+        </div>
+      </.form>
+    </div>
+  </div>
+<% end %>
