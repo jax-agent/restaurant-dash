@@ -681,7 +681,7 @@ defmodule RestaurantDashWeb.CheckoutLive do
           {format_price(totals.total)}
         </p>
         <p class="text-xs text-gray-400 mt-1">
-          incl. tax + delivery<%= if @tip_amount > 0, do: " + tip" %>
+          incl. tax + delivery{if @tip_amount > 0, do: " + tip"}
         </p>
 
         <div class="mt-4 p-3 bg-gray-50 rounded-xl text-sm text-gray-600">

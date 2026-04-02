@@ -66,7 +66,12 @@ defmodule RestaurantDash.Payments.StripeClientTest do
 
   describe "verify_webhook/2 (mock mode)" do
     test "accepts valid JSON in mock mode" do
-      body = Jason.encode!(%{"type" => "payment_intent.succeeded", "data" => %{"object" => %{"id" => "pi_123"}}})
+      body =
+        Jason.encode!(%{
+          "type" => "payment_intent.succeeded",
+          "data" => %{"object" => %{"id" => "pi_123"}}
+        })
+
       assert {:ok, event} = StripeClient.verify_webhook(body, nil)
       assert event["type"] == "payment_intent.succeeded"
     end

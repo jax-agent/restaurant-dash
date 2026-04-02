@@ -139,7 +139,8 @@ defmodule RestaurantDash.Payments do
   end
 
   @doc "Update an order's payment status."
-  def update_payment_status(order, status) when status in ~w(pending authorized captured failed refunded) do
+  def update_payment_status(order, status)
+      when status in ~w(pending authorized captured failed refunded) do
     order
     |> Ecto.Changeset.change(%{payment_status: status})
     |> Repo.update()
