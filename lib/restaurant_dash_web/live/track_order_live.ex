@@ -81,6 +81,24 @@ defmodule RestaurantDashWeb.TrackOrderLive do
   end
 
   @impl true
+  def handle_event("submit_restaurant_review", %{"rating" => rating} = params, socket) do
+    order = socket.assigns.order
+    rating_int = String.to_integer(rating)
+    review_text = Map.get(params, "review", "")
+
+    case Orders.submit_restaurant_review(order, rating_int, review_text) do
+      {:ok, updated} ->
+        {:noreply,
+         socket
+         |> assign(:order, updated)
+         |> put_flash(:info, "Thank you for reviewing the restaurant!")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to submit review.")}
+    end
+  end
+
+  @impl true
   def handle_info({:order_updated, order}, socket) do
     if order.id == socket.assigns.order.id do
       # Reload with order_items
@@ -330,6 +348,42 @@ defmodule RestaurantDashWeb.TrackOrderLive do
               <p class="text-sm text-gray-500">{@order.customer_phone}</p>
             <% end %>
           </div>
+
+          <%!-- Restaurant Review (shown after delivery) --%>
+          <%= if @order.status == "delivered" do %>
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <%= if @order.restaurant_rating do %>
+                <div class="text-center">
+                  <p class="text-2xl mb-1">🌟</p>
+                  <p class="font-semibold text-gray-900">Thanks for reviewing the restaurant!</p>
+                </div>
+              <% else %>
+                <h3 class="font-semibold text-gray-900 mb-3">Rate the Restaurant</h3>
+                <.form for={%{}} as={:review_form} phx-submit="submit_restaurant_review">
+                  <div class="flex justify-center gap-2 mb-3">
+                    <%= for star <- 1..5 do %>
+                      <label class="cursor-pointer text-3xl">
+                        <input type="radio" name="rating" value={star} class="sr-only" required />
+                        <span class="hover:scale-110 transition-transform inline-block">⭐</span>
+                      </label>
+                    <% end %>
+                  </div>
+                  <textarea
+                    name="review"
+                    placeholder="Tell us about your experience (optional)"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none"
+                    rows="2"
+                  />
+                  <button
+                    type="submit"
+                    class="mt-3 w-full py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700"
+                  >
+                    Submit Review
+                  </button>
+                </.form>
+              <% end %>
+            </div>
+          <% end %>
 
           <%!-- Driver Rating (shown after delivery) --%>
           <%= if @order.status == "delivered" && @order.driver_id do %>

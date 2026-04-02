@@ -105,6 +105,18 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             >
               Alerts
             </a>
+            <a href="/dashboard/promos" class="text-gray-600 hover:text-gray-900 font-medium">
+              Promos
+            </a>
+            <a href="/dashboard/loyalty" class="text-gray-600 hover:text-gray-900 font-medium">
+              Loyalty
+            </a>
+            <a href="/dashboard/locations" class="text-gray-600 hover:text-gray-900 font-medium">
+              Locations
+            </a>
+            <a href="/dashboard/hours" class="text-gray-600 hover:text-gray-900 font-medium">
+              Hours
+            </a>
             <%!-- Notification Bell --%>
             <div
               class="rounded-full p-1"
@@ -348,6 +360,38 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             >
               View all drivers →
             </a>
+          </div>
+        <% end %>
+
+        <%!-- Scheduled Orders --%>
+        <% scheduled = Orders.list_scheduled_orders(@restaurant.id) %>
+        <%= if length(scheduled) > 0 do %>
+          <div class="mt-6 bg-white rounded-xl border border-indigo-200 p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+              ⏰ Scheduled Orders ({length(scheduled)})
+            </h2>
+            <div class="space-y-2">
+              <%= for order <- scheduled do %>
+                <div class="flex items-center justify-between border border-gray-100 rounded-lg p-3">
+                  <div>
+                    <p class="font-medium text-gray-900">{order.customer_name}</p>
+                    <p class="text-sm text-gray-500">{order.delivery_address}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-semibold text-indigo-600">
+                      {if order.scheduled_for,
+                        do: Calendar.strftime(order.scheduled_for, "%b %-d at %-I:%M %p")}
+                    </p>
+                    <a
+                      href={"/orders/#{order.id}/track"}
+                      class="text-xs text-blue-500 hover:underline"
+                    >
+                      View
+                    </a>
+                  </div>
+                </div>
+              <% end %>
+            </div>
           </div>
         <% end %>
       </main>
