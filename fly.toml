@@ -10,6 +10,7 @@ primary_region = 'ord'
 
 [deploy]
   release_command = "/app/bin/migrate"
+  wait_timeout = "5m"
 
 [env]
   PHX_HOST = 'restaurant-dash.fly.dev'
