@@ -9,7 +9,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
   """
   use RestaurantDashWeb, :live_view
 
-  alias RestaurantDash.{Cart, Menu, Tenancy}
+  alias RestaurantDash.{Cart, Menu, Tenancy, Hours, Orders}
   alias RestaurantDashWeb.CartHelpers
 
   @impl true
@@ -28,18 +28,26 @@ defmodule RestaurantDashWeb.PublicMenuLive do
           |> assign(:restaurant, nil)
           |> assign(:menu, [])
           |> assign(:not_found, true)
+          |> assign(:open_status, {:closed, "Unknown"})
+          |> assign(:avg_rating, nil)
+          |> assign(:review_count, 0)
           |> CartHelpers.mount_cart(session)
 
         {:ok, socket}
 
       restaurant ->
         menu = Menu.get_full_menu(restaurant.id)
+        open_status = Hours.is_open?(restaurant.id, restaurant.timezone)
+        {avg_rating, review_count} = Orders.get_restaurant_rating(restaurant.id)
 
         socket =
           socket
           |> assign(:restaurant, restaurant)
           |> assign(:menu, menu)
           |> assign(:not_found, false)
+          |> assign(:open_status, open_status)
+          |> assign(:avg_rating, avg_rating)
+          |> assign(:review_count, review_count)
           |> CartHelpers.mount_cart(session, restaurant.id)
 
         {:ok, socket}
@@ -56,7 +64,18 @@ defmodule RestaurantDashWeb.PublicMenuLive do
 
         restaurant ->
           menu = Menu.get_full_menu(restaurant.id)
-          {:noreply, assign(socket, restaurant: restaurant, menu: menu, not_found: false)}
+          open_status = Hours.is_open?(restaurant.id, restaurant.timezone)
+          {avg_rating, review_count} = Orders.get_restaurant_rating(restaurant.id)
+
+          {:noreply,
+           assign(socket,
+             restaurant: restaurant,
+             menu: menu,
+             not_found: false,
+             open_status: open_status,
+             avg_rating: avg_rating,
+             review_count: review_count
+           )}
       end
     else
       {:noreply, socket}
@@ -82,6 +101,28 @@ defmodule RestaurantDashWeb.PublicMenuLive do
           style={"background-color: #{@restaurant.primary_color}"}
         >
           <h1 class="text-3xl font-bold">{@restaurant.name}</h1>
+          <div class="flex items-center justify-center gap-3 mt-2">
+            <%!-- Open/Closed badge --%>
+            <%= case @open_status do %>
+              <% {:open} -> %>
+                <span class="bg-green-500/90 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                  ● Open Now
+                </span>
+              <% {:closed, reason} -> %>
+                <span class="bg-red-500/80 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                  Closed — {reason}
+                </span>
+            <% end %>
+            <%!-- Average Rating --%>
+            <%= if @avg_rating do %>
+              <a
+                href={"/reviews?restaurant_slug=#{@restaurant.slug}"}
+                class="text-yellow-300 text-sm hover:text-yellow-100"
+              >
+                ★ {Float.round(@avg_rating, 1)} ({@review_count})
+              </a>
+            <% end %>
+          </div>
           <%= if @restaurant.description do %>
             <p class="mt-2 text-white/80 text-sm max-w-lg mx-auto">{@restaurant.description}</p>
           <% end %>

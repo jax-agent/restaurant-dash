@@ -10,7 +10,7 @@ defmodule RestaurantDashWeb.CheckoutLive do
   """
   use RestaurantDashWeb, :live_view
 
-  alias RestaurantDash.{Cart, Orders, Tenancy, Payments}
+  alias RestaurantDash.{Cart, Orders, Tenancy, Payments, Promotions}
   alias RestaurantDashWeb.CartHelpers
 
   # ─── Mount ───────────────────────────────────────────────────────────────────
@@ -46,6 +46,10 @@ defmodule RestaurantDashWeb.CheckoutLive do
       |> assign(:tip_amount, 0)
       |> assign(:tip_option, "0")
       |> assign(:custom_tip, "")
+      |> assign(:promo_code_input, "")
+      |> assign(:applied_promo, nil)
+      |> assign(:promo_error, nil)
+      |> assign(:discount_amount, 0)
       |> CartHelpers.mount_cart(session, restaurant && restaurant.id)
 
     {:ok, socket}
@@ -57,6 +61,47 @@ defmodule RestaurantDashWeb.CheckoutLive do
   def handle_event("update-field", %{"field" => field, "value" => value}, socket) do
     form_data = Map.put(socket.assigns.form_data, field, value)
     {:noreply, assign(socket, :form_data, form_data)}
+  end
+
+  @impl true
+  def handle_event("update-promo-code", %{"value" => value}, socket) do
+    {:noreply, assign(socket, promo_code_input: value)}
+  end
+
+  @impl true
+  def handle_event("apply-promo", _, socket) do
+    restaurant = socket.assigns.restaurant
+    code = socket.assigns.promo_code_input
+    cart = socket.assigns.cart
+    totals = Cart.calculate_totals(cart)
+
+    case Promotions.validate_promo_code(restaurant.id, code, totals.subtotal) do
+      {:ok, promo} ->
+        discount = Promotions.calculate_discount(promo, totals.subtotal)
+
+        {:noreply,
+         socket
+         |> assign(:applied_promo, promo)
+         |> assign(:discount_amount, discount)
+         |> assign(:promo_error, nil)}
+
+      {:error, msg} ->
+        {:noreply,
+         socket
+         |> assign(:applied_promo, nil)
+         |> assign(:discount_amount, 0)
+         |> assign(:promo_error, msg)}
+    end
+  end
+
+  @impl true
+  def handle_event("remove-promo", _, socket) do
+    {:noreply,
+     socket
+     |> assign(:applied_promo, nil)
+     |> assign(:discount_amount, 0)
+     |> assign(:promo_code_input, "")
+     |> assign(:promo_error, nil)}
   end
 
   @impl true
@@ -166,6 +211,9 @@ defmodule RestaurantDashWeb.CheckoutLive do
           {nil, "pending"}
         end
 
+      discount = socket.assigns.discount_amount
+      applied_promo = socket.assigns.applied_promo
+
       attrs = %{
         customer_name: form_data["customer_name"],
         customer_email: form_data["customer_email"],
@@ -173,12 +221,16 @@ defmodule RestaurantDashWeb.CheckoutLive do
         delivery_address: form_data["delivery_address"],
         restaurant_id: restaurant.id,
         payment_intent_id: payment_intent_id,
-        payment_status: payment_status
+        payment_status: payment_status,
+        discount_amount: discount,
+        promo_code: if(applied_promo, do: applied_promo.code, else: nil)
       }
 
-      case Orders.create_order_from_cart(cart, attrs, tip: tip) do
+      case Orders.create_order_from_cart(cart, attrs, tip: tip, discount: discount) do
         {:ok, order} ->
           maybe_schedule_lifecycle(order)
+          # Increment promo usage if a code was applied
+          if applied_promo, do: Promotions.increment_usage(applied_promo)
           socket = CartHelpers.clear_cart(socket)
 
           {:noreply,
@@ -273,6 +325,10 @@ defmodule RestaurantDashWeb.CheckoutLive do
                 tip_amount={@tip_amount}
                 tip_option={@tip_option}
                 custom_tip={@custom_tip}
+                discount_amount={@discount_amount}
+                applied_promo={@applied_promo}
+                promo_code_input={@promo_code_input}
+                promo_error={@promo_error}
               />
             <% :payment -> %>
               <.payment_step
@@ -460,9 +516,50 @@ defmodule RestaurantDashWeb.CheckoutLive do
               <span>Tip</span><span>{format_price(@tip_amount)}</span>
             </div>
           <% end %>
+          <%= if @discount_amount > 0 do %>
+            <div class="flex justify-between text-sm text-green-600 font-medium">
+              <span>Discount ({if @applied_promo, do: @applied_promo.code})</span>
+              <span>-{format_price(@discount_amount)}</span>
+            </div>
+          <% end %>
           <div class="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100">
-            <span>Total</span><span>{format_price(totals.total)}</span>
+            <span>Total</span>
+            <span>{format_price(max(totals.total - @discount_amount, 0))}</span>
           </div>
+        </div>
+
+        <%!-- Promo Code --%>
+        <div class="mt-4 pt-4 border-t border-gray-100">
+          <%= if @applied_promo do %>
+            <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <span class="text-green-700 text-sm font-medium">
+                ✓ Code: <strong>{@applied_promo.code}</strong>
+              </span>
+              <button phx-click="remove-promo" class="text-green-600 hover:text-green-800 text-xs">
+                Remove
+              </button>
+            </div>
+          <% else %>
+            <p class="text-sm font-medium text-gray-700 mb-2">Promo Code</p>
+            <div class="flex gap-2">
+              <input
+                type="text"
+                value={@promo_code_input}
+                phx-blur="update-promo-code"
+                placeholder="Enter code"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm uppercase"
+              />
+              <button
+                phx-click="apply-promo"
+                class="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-700"
+              >
+                Apply
+              </button>
+            </div>
+            <%= if @promo_error do %>
+              <p class="text-red-500 text-xs mt-1">{@promo_error}</p>
+            <% end %>
+          <% end %>
         </div>
       </div>
 

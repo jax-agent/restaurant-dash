@@ -215,7 +215,11 @@ defmodule RestaurantDash.Orders do
   """
   def create_order_from_cart(%Cart{} = cart, attrs, opts \\ []) do
     tip = Keyword.get(opts, :tip, 0)
+    discount = Keyword.get(opts, :discount, Map.get(attrs, :discount_amount, 0))
     totals = Cart.calculate_totals(cart, tip: tip)
+
+    # Apply discount: subtract from total, floor at 0
+    discounted_total = max(totals.total - discount, 0)
 
     order_attrs =
       attrs
@@ -223,7 +227,8 @@ defmodule RestaurantDash.Orders do
       |> Map.put(:tax_amount, totals.tax)
       |> Map.put(:delivery_fee, totals.delivery_fee)
       |> Map.put(:tip_amount, totals.tip)
-      |> Map.put(:total_amount, totals.total)
+      |> Map.put(:total_amount, discounted_total)
+      |> Map.put(:discount_amount, discount)
       |> Map.put(:status, "new")
 
     Repo.transaction(fn ->
