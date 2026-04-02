@@ -27,12 +27,16 @@ import topbar from "../vendor/topbar"
 import DeliveryMap from "./hooks/delivery_map"
 import KdsKeyboard from "./hooks/kds_keyboard"
 import KdsAudio from "./hooks/kds_audio"
+import DriverGPS from "./hooks/driver_gps"
+import DriverTrackingMap from "./hooks/driver_tracking_map"
 
 const Hooks = {
   ...colocatedHooks,
   DeliveryMap,
   KdsKeyboard,
   KdsAudio,
+  DriverGPS,
+  DriverTrackingMap,
 }
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")

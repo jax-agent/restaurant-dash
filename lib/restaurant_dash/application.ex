@@ -15,6 +15,8 @@ defmodule RestaurantDash.Application do
       {Oban, Application.fetch_env!(:restaurant_dash, Oban)},
       # Cart store (ETS-backed, session-scoped carts)
       RestaurantDash.Cart.Store,
+      # Driver location cache (ETS-backed, real-time GPS)
+      RestaurantDash.Drivers.LocationCache,
       # Start to serve requests, typically the last entry
       RestaurantDashWeb.Endpoint
     ]

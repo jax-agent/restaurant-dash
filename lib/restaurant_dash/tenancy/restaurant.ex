@@ -20,7 +20,16 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :lat, :float
     field :lng, :float
 
+    # Phase 7: Delivery fee settings
+    field :fee_mode, :string, default: "flat"
+    field :base_delivery_fee, :integer, default: 299
+    field :per_mile_rate, :integer, default: 50
+    field :free_delivery_threshold, :integer, default: 0
+    field :driver_base_pay, :integer, default: 500
+    field :driver_per_mile_pay, :integer, default: 50
+
     has_many :orders, RestaurantDash.Orders.Order
+    has_many :delivery_zones, RestaurantDash.Delivery.DeliveryZone
 
     timestamps(type: :utc_datetime)
   end
@@ -40,7 +49,13 @@ defmodule RestaurantDash.Tenancy.Restaurant do
       :primary_color,
       :logo_url,
       :timezone,
-      :is_active
+      :is_active,
+      :fee_mode,
+      :base_delivery_fee,
+      :per_mile_rate,
+      :free_delivery_threshold,
+      :driver_base_pay,
+      :driver_per_mile_pay
     ])
     |> validate_required([:name, :slug])
     |> validate_length(:name, min: 2, max: 100)

@@ -44,6 +44,14 @@ defmodule RestaurantDash.Orders.Order do
     field :picked_up_at, :utc_datetime
     field :delivered_at, :utc_datetime
 
+    # Phase 7: Proof of delivery
+    field :delivery_photo, :string
+    field :delivery_signature, :string
+
+    # Phase 7: Driver rating
+    field :driver_rating, :integer
+    field :driver_rating_comment, :string
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :driver, RestaurantDash.Accounts.User
     has_many :order_items, RestaurantDash.Orders.OrderItem
@@ -178,6 +186,22 @@ defmodule RestaurantDash.Orders.Order do
   def position_changeset(order, lat, lng) do
     order
     |> cast(%{lat: lat, lng: lng}, [:lat, :lng])
+  end
+
+  @doc "Changeset for proof of delivery (photo + signature)."
+  def proof_of_delivery_changeset(order, attrs) do
+    order
+    |> cast(attrs, [:delivery_photo, :delivery_signature])
+  end
+
+  @doc "Changeset for driver rating submission."
+  def driver_rating_changeset(order, rating, comment) do
+    order
+    |> cast(%{driver_rating: rating, driver_rating_comment: comment}, [
+      :driver_rating,
+      :driver_rating_comment
+    ])
+    |> validate_number(:driver_rating, greater_than_or_equal_to: 1, less_than_or_equal_to: 5)
   end
 
   def prep_time_changeset(order, minutes) do

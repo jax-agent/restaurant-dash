@@ -15,7 +15,7 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Drivers, Orders}
+  alias RestaurantDash.{Drivers, Orders, Tenancy}
 
   @impl true
   def mount(_params, _session, socket) do
@@ -33,6 +33,9 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
           |> assign(:current_user, current_user)
           |> assign(:profile, profile)
           |> assign(:page_title, "Driver Dashboard")
+          |> assign(:show_proof_form, false)
+          |> assign(:proof_photo, nil)
+          |> assign(:proof_signature, nil)
           |> load_driver_data(profile, current_user.id)
 
         {:ok, socket}
@@ -100,7 +103,33 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
   end
 
   @impl true
+  def handle_event("show_proof_form", _params, socket) do
+    {:noreply, assign(socket, :show_proof_form, true)}
+  end
+
+  @impl true
+  def handle_event("capture_photo", %{"photo" => photo_b64}, socket) do
+    {:noreply, assign(socket, :proof_photo, photo_b64)}
+  end
+
+  @impl true
+  def handle_event("capture_signature", %{"signature" => sig_b64}, socket) do
+    {:noreply, assign(socket, :proof_signature, sig_b64)}
+  end
+
+  @impl true
   def handle_event("mark_delivered", _params, socket) do
+    case socket.assigns[:active_delivery] do
+      nil ->
+        {:noreply, put_flash(socket, :error, "No active delivery.")}
+
+      _order ->
+        {:noreply, assign(socket, :show_proof_form, true)}
+    end
+  end
+
+  @impl true
+  def handle_event("confirm_delivered", _params, socket) do
     case socket.assigns[:active_delivery] do
       nil ->
         {:noreply, put_flash(socket, :error, "No active delivery.")}
@@ -108,12 +137,29 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
       order ->
         user_id = socket.assigns.current_user.id
         profile = socket.assigns.profile
+        photo = socket.assigns.proof_photo
+        signature = socket.assigns.proof_signature
 
-        with {:ok, _order} <- Orders.update_delivery_status(order, "delivered"),
+        with {:ok, updated_order} <- Orders.update_delivery_status(order, "delivered"),
+             {:ok, _} <-
+               Orders.submit_proof_of_delivery(updated_order, %{
+                 delivery_photo: photo,
+                 delivery_signature: signature
+               }),
              {:ok, updated_profile} <- Drivers.set_status(profile, "available") do
+          # Record earnings async
+          restaurant = order.restaurant_id && Tenancy.get_restaurant(order.restaurant_id)
+
+          Task.start(fn ->
+            Drivers.record_delivery_earnings(profile, updated_order, restaurant)
+          end)
+
           socket =
             socket
             |> assign(:profile, updated_profile)
+            |> assign(:show_proof_form, false)
+            |> assign(:proof_photo, nil)
+            |> assign(:proof_signature, nil)
             |> put_flash(:info, "Delivery complete! 🎉")
             |> load_driver_data(updated_profile, user_id)
 
@@ -155,6 +201,17 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
   @impl true
   def render(assigns) do
     ~H"""
+    <%!-- Hidden GPS tracker element (sends location to Phoenix channel) --%>
+    <%= if @profile.is_approved and @profile.status in ["available", "on_delivery"] do %>
+      <div
+        id="driver-gps"
+        phx-hook="DriverGPS"
+        data-driver-id={@current_user.id}
+        data-order-id={@active_delivery && @active_delivery.id}
+        style="display:none"
+      />
+    <% end %>
+
     <div class="min-h-screen bg-gray-100">
       <!-- Mobile header with availability toggle -->
       <div class="bg-white shadow-sm sticky top-0 z-10">
@@ -249,15 +306,53 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
                     ✅ Picked Up
                   </button>
                 <% end %>
-                <%= if @active_delivery.status == "picked_up" do %>
+                <%= if @active_delivery.status == "picked_up" and not @show_proof_form do %>
                   <button
                     phx-click="mark_delivered"
                     class="flex-1 py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors"
                   >
-                    🏠 Mark Delivered
+                    📷 Mark Delivered
                   </button>
                 <% end %>
               </div>
+
+              <%!-- Proof of Delivery Form --%>
+              <%= if @show_proof_form do %>
+                <div class="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <h3 class="font-semibold text-green-900 mb-3">📸 Proof of Delivery</h3>
+                  <p class="text-sm text-green-700 mb-3">Capture a photo to confirm delivery.</p>
+
+                  <%!-- Photo capture --%>
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      📷 Photo (optional)
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      id="proof-photo-input"
+                      class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-800 hover:file:bg-green-200"
+                    />
+                  </div>
+
+                  <%!-- Confirm button --%>
+                  <div class="flex gap-3">
+                    <button
+                      phx-click="confirm_delivered"
+                      class="flex-1 py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors"
+                    >
+                      ✓ Confirm Delivered
+                    </button>
+                    <button
+                      phx-click="show_proof_form"
+                      class="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition-colors"
+                    >
+                      Back
+                    </button>
+                  </div>
+                </div>
+              <% end %>
             </div>
           <% else %>
             <div class="p-8 text-center">
@@ -278,17 +373,36 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
           <% end %>
         </div>
         
-    <!-- Today's earnings -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl shadow-sm p-4">
-            <p class="text-3xl font-bold text-gray-900">{@today_count}</p>
-            <p class="text-sm text-gray-500 mt-1">Deliveries today</p>
+    <!-- Earnings Summary -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <h2 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Earnings</h2>
+            <%= if @avg_rating do %>
+              <span class="text-sm text-gray-600">
+                ⭐ {Float.round(@avg_rating, 1)} <span class="text-gray-400">({@rating_count})</span>
+              </span>
+            <% end %>
           </div>
-          <div class="bg-white rounded-xl shadow-sm p-4">
-            <p class="text-3xl font-bold text-green-600">
-              ${format_cents(@today_tips)}
-            </p>
-            <p class="text-sm text-gray-500 mt-1">Tips today</p>
+          <div class="grid grid-cols-3 divide-x divide-gray-100">
+            <div class="p-4 text-center">
+              <p class="text-xl font-bold text-green-600">${format_cents(@today_earnings.total)}</p>
+              <p class="text-xs text-gray-500 mt-1">Today</p>
+              <p class="text-xs text-gray-400">{@today_count} deliveries</p>
+            </div>
+            <div class="p-4 text-center">
+              <p class="text-xl font-bold text-green-700">${format_cents(@week_earnings.total)}</p>
+              <p class="text-xs text-gray-500 mt-1">This Week</p>
+              <p class="text-xs text-gray-400">{@week_earnings.count} deliveries</p>
+            </div>
+            <div class="p-4 text-center">
+              <p class="text-xl font-bold text-gray-900">${format_cents(@total_earnings.total)}</p>
+              <p class="text-xs text-gray-500 mt-1">All Time</p>
+              <p class="text-xs text-gray-400">{@total_earnings.count} deliveries</p>
+            </div>
+          </div>
+          <div class="px-4 py-2 bg-gray-50 flex gap-4 text-xs text-gray-500">
+            <span>Base: ${format_cents(@today_earnings.base)}</span>
+            <span>Tips: ${format_cents(@today_earnings.tips)}</span>
           </div>
         </div>
         
@@ -358,12 +472,25 @@ defmodule RestaurantDashWeb.DriverDashboardLive do
     today_count = Orders.count_driver_deliveries_today(user_id)
     today_tips = Orders.sum_driver_tips_today(user_id)
 
+    # Earnings from new driver earnings system
+    today_earnings = Drivers.get_today_earnings(profile.id)
+    week_earnings = Drivers.get_week_earnings(profile.id)
+    total_earnings = Drivers.get_total_earnings(profile.id)
+
+    # Average rating
+    {avg_rating, rating_count} = Orders.get_driver_average_rating(user_id)
+
     socket
     |> assign(:profile, profile)
     |> assign(:active_delivery, active_delivery)
     |> assign(:recent_deliveries, recent_deliveries)
     |> assign(:today_count, today_count)
     |> assign(:today_tips, today_tips)
+    |> assign(:today_earnings, today_earnings)
+    |> assign(:week_earnings, week_earnings)
+    |> assign(:total_earnings, total_earnings)
+    |> assign(:avg_rating, avg_rating)
+    |> assign(:rating_count, rating_count)
   end
 
   defp status_label("available"), do: "Available"

@@ -6,7 +6,8 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Tenancy, Payments}
+  alias RestaurantDash.{Tenancy, Payments, Delivery}
+  alias RestaurantDash.Delivery.DeliveryZone
 
   @impl true
   def mount(params, _session, socket) do
@@ -34,6 +35,8 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
 
         form = restaurant |> Tenancy.change_restaurant() |> to_form(as: :restaurant)
 
+        zones = Delivery.list_zones(restaurant.id)
+
         {:ok,
          socket
          |> assign(:current_user, current_user)
@@ -41,7 +44,10 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
          |> assign(:form, form)
          |> assign(:saved, false)
          |> assign(:stripe_connecting, false)
-         |> assign(:stripe_just_connected, stripe_just_connected)}
+         |> assign(:stripe_just_connected, stripe_just_connected)
+         |> assign(:zones, zones)
+         |> assign(:zone_form, nil)
+         |> assign(:editing_zone, nil)}
 
       {:error, :unauthenticated} ->
         {:ok,
@@ -107,6 +113,108 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
         {:noreply, socket |> assign(:form, form) |> assign(:saved, false)}
     end
   end
+
+  @impl true
+  def handle_event("new_zone", _params, socket) do
+    zone = %DeliveryZone{}
+    form = Delivery.change_zone(zone) |> to_form(as: :zone)
+    {:noreply, socket |> assign(:editing_zone, zone) |> assign(:zone_form, form)}
+  end
+
+  def handle_event("edit_zone", %{"id" => id}, socket) do
+    zone = Delivery.get_zone!(String.to_integer(id))
+    form = Delivery.change_zone(zone) |> to_form(as: :zone)
+    {:noreply, socket |> assign(:editing_zone, zone) |> assign(:zone_form, form)}
+  end
+
+  def handle_event("cancel_zone", _params, socket) do
+    {:noreply, socket |> assign(:editing_zone, nil) |> assign(:zone_form, nil)}
+  end
+
+  def handle_event("validate_zone", %{"zone" => params}, socket) do
+    form =
+      (socket.assigns.editing_zone || %DeliveryZone{})
+      |> Delivery.change_zone(normalize_zone_params(params))
+      |> Map.put(:action, :validate)
+      |> to_form(as: :zone)
+
+    {:noreply, assign(socket, :zone_form, form)}
+  end
+
+  def handle_event("save_zone", %{"zone" => params}, socket) do
+    normalized = normalize_zone_params(params)
+
+    result =
+      case socket.assigns.editing_zone do
+        %DeliveryZone{id: nil} ->
+          Delivery.create_zone(Map.put(normalized, "restaurant_id", socket.assigns.restaurant.id))
+
+        %DeliveryZone{} = zone ->
+          Delivery.update_zone(zone, normalized)
+      end
+
+    case result do
+      {:ok, _zone} ->
+        zones = Delivery.list_zones(socket.assigns.restaurant.id)
+
+        {:noreply,
+         socket
+         |> assign(:zones, zones)
+         |> assign(:editing_zone, nil)
+         |> assign(:zone_form, nil)
+         |> put_flash(:info, "Delivery zone saved.")}
+
+      {:error, changeset} ->
+        form = changeset |> Map.put(:action, :update) |> to_form(as: :zone)
+        {:noreply, assign(socket, :zone_form, form)}
+    end
+  end
+
+  def handle_event("delete_zone", %{"id" => id}, socket) do
+    zone = Delivery.get_zone!(String.to_integer(id))
+    Delivery.delete_zone(zone)
+    zones = Delivery.list_zones(socket.assigns.restaurant.id)
+    {:noreply, socket |> assign(:zones, zones) |> put_flash(:info, "Zone deleted.")}
+  end
+
+  # Normalize zone params: parse delivery_fee, min_order from dollar strings to cents
+  # Also parse polygon_json textarea into the polygon field
+  defp normalize_zone_params(params) do
+    params
+    |> Map.update("delivery_fee", 0, fn v ->
+      case Float.parse(to_string(v)) do
+        {f, _} -> round(f * 100)
+        :error -> 0
+      end
+    end)
+    |> Map.update("min_order", 0, fn v ->
+      case Float.parse(to_string(v)) do
+        {f, _} -> round(f * 100)
+        :error -> 0
+      end
+    end)
+    |> parse_polygon_json()
+  end
+
+  defp parse_polygon_json(%{"polygon_json" => json} = params) when is_binary(json) do
+    polygon =
+      case Jason.decode(json) do
+        {:ok, list} when is_list(list) -> list
+        _ -> []
+      end
+
+    params
+    |> Map.delete("polygon_json")
+    |> Map.put("polygon", polygon)
+  end
+
+  defp parse_polygon_json(params), do: params
+
+  defp format_cents(nil), do: "0.00"
+  defp format_cents(0), do: "0.00"
+
+  defp format_cents(cents) when is_integer(cents),
+    do: :erlang.float_to_binary(cents / 100, decimals: 2)
 
   @impl true
   def render(assigns) do
@@ -260,6 +368,200 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
               </div>
             <% end %>
           </div>
+        </div>
+
+        <%!-- Delivery Fee Settings --%>
+        <div class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
+          <h2 class="text-base font-semibold text-gray-800 mb-1">Delivery Fee Settings</h2>
+          <p class="text-sm text-gray-500 mb-4">
+            Configure how delivery fees are calculated for customers.
+          </p>
+          <.form for={@form} phx-submit="save" phx-change="validate" id="fee-settings-form">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <.input
+                  field={@form[:fee_mode]}
+                  type="select"
+                  label="Fee Mode"
+                  options={[
+                    {"Flat fee", "flat"},
+                    {"Zone-based", "zone"},
+                    {"Distance-based", "distance"}
+                  ]}
+                />
+              </div>
+              <div>
+                <.input
+                  field={@form[:base_delivery_fee]}
+                  type="number"
+                  label="Base Delivery Fee (cents)"
+                  placeholder="299"
+                />
+              </div>
+              <div>
+                <.input
+                  field={@form[:per_mile_rate]}
+                  type="number"
+                  label="Per Mile Rate (cents)"
+                  placeholder="50"
+                />
+              </div>
+              <div>
+                <.input
+                  field={@form[:free_delivery_threshold]}
+                  type="number"
+                  label="Free Delivery Threshold (cents, 0 = disabled)"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <.input
+                  field={@form[:driver_base_pay]}
+                  type="number"
+                  label="Driver Base Pay (cents)"
+                  placeholder="500"
+                />
+              </div>
+              <div>
+                <.input
+                  field={@form[:driver_per_mile_pay]}
+                  type="number"
+                  label="Driver Per Mile Pay (cents)"
+                  placeholder="50"
+                />
+              </div>
+            </div>
+            <button
+              type="submit"
+              class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700"
+            >
+              Save Fee Settings
+            </button>
+          </.form>
+        </div>
+
+        <%!-- Delivery Zones --%>
+        <div class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-gray-800">Delivery Zones</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                Define polygon-based delivery zones with custom fees.
+              </p>
+            </div>
+            <button
+              phx-click="new_zone"
+              class="px-3 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
+            >
+              + Add Zone
+            </button>
+          </div>
+
+          <%= if @zone_form do %>
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <h3 class="font-semibold text-blue-900 mb-3">
+                {if @editing_zone && @editing_zone.id, do: "Edit Zone", else: "New Zone"}
+              </h3>
+              <.form for={@zone_form} phx-submit="save_zone" phx-change="validate_zone">
+                <div class="grid grid-cols-2 gap-3">
+                  <div class="col-span-2">
+                    <.input
+                      field={@zone_form[:name]}
+                      type="text"
+                      label="Zone Name"
+                      placeholder="Downtown"
+                    />
+                  </div>
+                  <div>
+                    <.input
+                      field={@zone_form[:delivery_fee]}
+                      type="number"
+                      label="Delivery Fee ($)"
+                      step="0.01"
+                      placeholder="2.99"
+                    />
+                  </div>
+                  <div>
+                    <.input
+                      field={@zone_form[:min_order]}
+                      type="number"
+                      label="Min Order ($)"
+                      step="0.01"
+                      placeholder="10.00"
+                    />
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      Polygon (JSON array of [lat, lng] points)
+                    </label>
+                    <textarea
+                      name="zone[polygon_json]"
+                      placeholder="[[37.785,-122.425],[37.785,-122.395],[37.765,-122.395],[37.765,-122.425]]"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono resize-y focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                      rows="3"
+                    >{Jason.encode!(@editing_zone.polygon || [])}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                      Enter coordinates as JSON array, e.g. [[lat,lng],[lat,lng],...]
+                    </p>
+                  </div>
+                </div>
+                <div class="flex gap-3 mt-3">
+                  <button
+                    type="submit"
+                    class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700"
+                  >
+                    Save Zone
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="cancel_zone"
+                    class="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </.form>
+            </div>
+          <% end %>
+
+          <%= if @zones == [] do %>
+            <div class="text-center py-8 text-gray-400">
+              <p>No delivery zones defined.</p>
+              <p class="text-sm mt-1">Add zones to restrict delivery to specific areas.</p>
+            </div>
+          <% else %>
+            <div class="space-y-2">
+              <%= for zone <- @zones do %>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p class="font-medium text-sm text-gray-900">{zone.name}</p>
+                    <p class="text-xs text-gray-500">
+                      Fee: ${format_cents(zone.delivery_fee)} · Min: ${format_cents(zone.min_order)} · {length(
+                        zone.polygon
+                      )} points {unless zone.is_active, do: "· ⚫ Inactive"}
+                    </p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button
+                      phx-click="edit_zone"
+                      phx-value-id={zone.id}
+                      class="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      phx-click="delete_zone"
+                      phx-value-id={zone.id}
+                      data-confirm="Delete this zone?"
+                      class="text-xs text-red-600 hover:text-red-800 font-medium"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
 
         <%!-- Stripe Connect Section --%>

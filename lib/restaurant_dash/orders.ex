@@ -309,6 +309,43 @@ defmodule RestaurantDash.Orders do
     end
   end
 
+  @doc "Submit proof of delivery (photo and/or signature)."
+  def submit_proof_of_delivery(%Order{} = order, attrs) do
+    order
+    |> Order.proof_of_delivery_changeset(attrs)
+    |> Repo.update()
+    |> tap_broadcast(:order_updated)
+  end
+
+  @doc "Submit a driver rating for a delivered order."
+  def submit_driver_rating(%Order{} = order, rating, comment \\ "") do
+    order
+    |> Order.driver_rating_changeset(rating, comment)
+    |> Repo.update()
+  end
+
+  @doc "Get the average driver rating for a given driver user_id."
+  def get_driver_average_rating(driver_user_id) do
+    result =
+      Order
+      |> where([o], o.driver_id == ^driver_user_id and not is_nil(o.driver_rating))
+      |> select([o], {avg(o.driver_rating), count(o.id)})
+      |> Repo.one()
+
+    case result do
+      {nil, 0} -> {nil, 0}
+      {avg, count} -> {Decimal.to_float(avg), count}
+    end
+  end
+
+  @doc "List delivered orders with ratings for driver reporting."
+  def list_orders_with_ratings(restaurant_id) do
+    Order
+    |> where([o], o.restaurant_id == ^restaurant_id and not is_nil(o.driver_rating))
+    |> order_by([o], desc: o.delivered_at)
+    |> Repo.all()
+  end
+
   defp encode_modifiers(modifier_names) when is_list(modifier_names) do
     modifier_names
     |> Enum.map(fn

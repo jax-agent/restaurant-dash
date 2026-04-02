@@ -11,6 +11,7 @@ defmodule RestaurantDash.Drivers do
   alias RestaurantDash.Repo
   alias RestaurantDash.Accounts
   alias RestaurantDash.Drivers.DriverProfile
+  alias RestaurantDash.Drivers.DriverEarning
 
   @pubsub RestaurantDash.PubSub
 
@@ -188,6 +189,152 @@ defmodule RestaurantDash.Drivers do
   end
 
   defp deg_to_rad(deg), do: deg * :math.pi() / 180.0
+
+  # ─── Private ───────────────────────────────────────────────────────────────
+
+  # ─── Earnings ──────────────────────────────────────────────────────────────
+
+  @doc """
+  Record earnings for a completed delivery.
+
+  Calculates base pay using restaurant's driver_base_pay + distance.
+  Tips come 100% from the order tip_amount.
+  """
+  def record_delivery_earnings(driver_profile, order, restaurant) do
+    base_pay = calculate_base_pay(driver_profile, order, restaurant)
+    tip = order.tip_amount || 0
+    total = base_pay + tip
+
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    %DriverEarning{}
+    |> DriverEarning.changeset(%{
+      driver_profile_id: driver_profile.id,
+      order_id: order.id,
+      base_pay: base_pay,
+      tip_amount: tip,
+      total_earned: total,
+      period_start: now,
+      period_end: now
+    })
+    |> Repo.insert(on_conflict: :nothing)
+  end
+
+  defp calculate_base_pay(driver_profile, order, restaurant) do
+    base = (restaurant && restaurant.driver_base_pay) || 500
+
+    # Add per-mile component if we have coordinates
+    extra =
+      if driver_profile.current_lat && driver_profile.current_lng &&
+           order.lat && order.lng do
+        km =
+          haversine_km(
+            driver_profile.current_lat,
+            driver_profile.current_lng,
+            order.lat,
+            order.lng
+          )
+
+        miles = km * 0.621371
+        per_mile = (restaurant && restaurant.driver_per_mile_pay) || 50
+        round(miles * per_mile)
+      else
+        0
+      end
+
+    base + extra
+  end
+
+  @doc "Get today's total earnings for a driver profile."
+  def get_today_earnings(driver_profile_id) do
+    today = Date.utc_today()
+    today_start = DateTime.new!(today, ~T[00:00:00], "Etc/UTC")
+
+    DriverEarning
+    |> where([e], e.driver_profile_id == ^driver_profile_id and e.inserted_at >= ^today_start)
+    |> select([e], %{
+      total: sum(e.total_earned),
+      base: sum(e.base_pay),
+      tips: sum(e.tip_amount),
+      count: count(e.id)
+    })
+    |> Repo.one()
+    |> normalize_earnings_summary()
+  end
+
+  @doc "Get this week's total earnings for a driver profile."
+  def get_week_earnings(driver_profile_id) do
+    # Day of week: 1=Monday...7=Sunday
+    today = Date.utc_today()
+    days_since_monday = Date.day_of_week(today) - 1
+    week_start_date = Date.add(today, -days_since_monday)
+    week_start = DateTime.new!(week_start_date, ~T[00:00:00], "Etc/UTC")
+
+    DriverEarning
+    |> where([e], e.driver_profile_id == ^driver_profile_id and e.inserted_at >= ^week_start)
+    |> select([e], %{
+      total: sum(e.total_earned),
+      base: sum(e.base_pay),
+      tips: sum(e.tip_amount),
+      count: count(e.id)
+    })
+    |> Repo.one()
+    |> normalize_earnings_summary()
+  end
+
+  @doc "Get all-time earnings for a driver profile."
+  def get_total_earnings(driver_profile_id) do
+    DriverEarning
+    |> where([e], e.driver_profile_id == ^driver_profile_id)
+    |> select([e], %{
+      total: sum(e.total_earned),
+      base: sum(e.base_pay),
+      tips: sum(e.tip_amount),
+      count: count(e.id)
+    })
+    |> Repo.one()
+    |> normalize_earnings_summary()
+  end
+
+  @doc "List earnings for driver payout report (owner view), filtered by date range."
+  def list_earnings_report(restaurant_id, date_from \\ nil, date_to \\ nil) do
+    query =
+      DriverEarning
+      |> join(:inner, [e], dp in DriverProfile, on: dp.id == e.driver_profile_id)
+      |> join(:inner, [e, dp], o in RestaurantDash.Orders.Order, on: o.id == e.order_id)
+      |> where([e, dp, o], o.restaurant_id == ^restaurant_id)
+      |> order_by([e], desc: e.inserted_at)
+      |> preload([e, dp, o], driver_profile: {dp, :user}, order: o)
+
+    query =
+      if date_from,
+        do: where(query, [e], e.inserted_at >= ^date_from),
+        else: query
+
+    query =
+      if date_to,
+        do: where(query, [e], e.inserted_at <= ^date_to),
+        else: query
+
+    Repo.all(query)
+  end
+
+  defp normalize_earnings_summary(%{total: nil} = _result) do
+    %{total: 0, base: 0, tips: 0, count: 0}
+  end
+
+  defp normalize_earnings_summary(%{total: total, base: base, tips: tips, count: count}) do
+    %{
+      total: decimal_to_int(total),
+      base: decimal_to_int(base),
+      tips: decimal_to_int(tips),
+      count: decimal_to_int(count)
+    }
+  end
+
+  defp decimal_to_int(nil), do: 0
+  defp decimal_to_int(%Decimal{} = d), do: Decimal.to_integer(d)
+  defp decimal_to_int(n) when is_integer(n), do: n
 
   # ─── Private ───────────────────────────────────────────────────────────────
 

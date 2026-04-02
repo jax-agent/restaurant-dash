@@ -7,7 +7,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Orders, Tenancy}
+  alias RestaurantDash.{Orders, Drivers, Tenancy}
   alias RestaurantDash.Orders.Order
 
   @statuses Order.valid_statuses()
@@ -191,21 +191,112 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             </div>
           <% end %>
         </div>
+        <%!-- Driver Ratings & Earnings --%>
+        <%= if length(@driver_ratings) > 0 do %>
+          <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-800 mb-4">Driver Ratings</h2>
+            <div class="space-y-3">
+              <%= for %{profile: profile, avg_rating: avg, rating_count: count, low_rated: low_rated} <- @driver_ratings do %>
+                <div class={"flex items-center justify-between p-3 rounded-lg #{if low_rated, do: "bg-red-50 border border-red-200", else: "bg-gray-50"}"}>
+                  <div>
+                    <p class="font-medium text-sm text-gray-900">
+                      {profile.user && (profile.user.name || profile.user.email)}
+                    </p>
+                    <p class="text-xs text-gray-500">{profile.vehicle_type}</p>
+                    <%= if low_rated do %>
+                      <p class="text-xs text-red-600 font-medium mt-0.5">⚠️ Low rating alert</p>
+                    <% end %>
+                  </div>
+                  <div class="text-right">
+                    <%= if avg do %>
+                      <p class="font-semibold text-sm">⭐ {Float.round(avg, 1)}</p>
+                      <p class="text-xs text-gray-400">{count} reviews</p>
+                    <% else %>
+                      <p class="text-xs text-gray-400">No ratings yet</p>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <%!-- Recent Earnings (Payout Report) --%>
+        <%= if length(@earnings) > 0 do %>
+          <div class="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 class="text-base font-semibold text-gray-800 mb-4">Recent Driver Earnings</h2>
+            <div class="space-y-2">
+              <%= for earning <- @earnings do %>
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p class="text-sm font-medium text-gray-900">
+                      {earning.driver_profile && earning.driver_profile.user &&
+                        (earning.driver_profile.user.name || earning.driver_profile.user.email)}
+                    </p>
+                    <p class="text-xs text-gray-500">Order #{earning.order_id}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-semibold text-green-600">
+                      ${format_cents(earning.total_earned)}
+                    </p>
+                    <p class="text-xs text-gray-400">
+                      Base ${format_cents(earning.base_pay)} + Tip ${format_cents(earning.tip_amount)}
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            <a
+              href="/dashboard/drivers"
+              class="mt-3 inline-block text-sm text-blue-600 hover:underline"
+            >
+              View all drivers →
+            </a>
+          </div>
+        <% end %>
       </main>
     </div>
     """
   end
+
+  defp format_cents(nil), do: "0.00"
+  defp format_cents(0), do: "0.00"
+
+  defp format_cents(cents) when is_integer(cents),
+    do: :erlang.float_to_binary(cents / 100, decimals: 2)
 
   # ─── Private ──────────────────────────────────────────────────────────────
 
   defp load_stats(socket, restaurant_id) do
     recent = Orders.list_orders(restaurant_id) |> Enum.take(-10) |> Enum.reverse()
 
+    # Driver ratings: load all driver profiles with avg rating
+    driver_profiles =
+      Drivers.list_profiles()
+      |> Enum.filter(&(&1.user && &1.user.restaurant_id == restaurant_id))
+
+    driver_ratings =
+      Enum.map(driver_profiles, fn profile ->
+        {avg, count} = Orders.get_driver_average_rating(profile.user_id)
+
+        %{
+          profile: profile,
+          avg_rating: avg,
+          rating_count: count,
+          low_rated: avg != nil and avg < 3.5
+        }
+      end)
+
+    # Earnings report for restaurant
+    earnings = Drivers.list_earnings_report(restaurant_id) |> Enum.take(20)
+
     socket
     |> assign(:today_count, Orders.count_today(restaurant_id))
     |> assign(:total_count, Orders.count_total(restaurant_id))
     |> assign(:status_counts, Orders.count_by_status(restaurant_id))
     |> assign(:recent_orders, recent)
+    |> assign(:driver_ratings, driver_ratings)
+    |> assign(:earnings, earnings)
   end
 
   defp get_current_user(socket) do

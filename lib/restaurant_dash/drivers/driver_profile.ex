@@ -20,6 +20,7 @@ defmodule RestaurantDash.Drivers.DriverProfile do
     field :status, :string, default: "offline"
     field :current_lat, :float
     field :current_lng, :float
+    field :last_location_at, :utc_datetime
 
     belongs_to :user, RestaurantDash.Accounts.User
 
@@ -61,8 +62,14 @@ defmodule RestaurantDash.Drivers.DriverProfile do
 
   @doc "Changeset for updating location."
   def location_changeset(profile, lat, lng) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
     profile
-    |> cast(%{current_lat: lat, current_lng: lng}, [:current_lat, :current_lng])
+    |> cast(%{current_lat: lat, current_lng: lng, last_location_at: now}, [
+      :current_lat,
+      :current_lng,
+      :last_location_at
+    ])
   end
 
   @doc "Changeset for approval/suspension."

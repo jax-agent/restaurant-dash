@@ -29,7 +29,10 @@ defmodule RestaurantDashWeb.TrackOrderLive do
         {:ok,
          socket
          |> assign(:order, nil)
-         |> assign(:not_found, true)}
+         |> assign(:not_found, true)
+         |> assign(:driver_lat, nil)
+         |> assign(:driver_lng, nil)
+         |> assign(:rating_submitted, false)}
 
       order ->
         if connected?(socket) do
@@ -38,16 +41,39 @@ defmodule RestaurantDashWeb.TrackOrderLive do
 
         restaurant = order.restaurant_id && Tenancy.get_restaurant(order.restaurant_id)
 
+        # Seed driver location from ETS cache if available
+        driver_loc = get_driver_location(order)
+
         {:ok,
          socket
          |> assign(:order, order)
          |> assign(:restaurant, restaurant)
          |> assign(:not_found, false)
-         |> assign(:timeline_steps, @timeline_steps)}
+         |> assign(:timeline_steps, @timeline_steps)
+         |> assign(:driver_lat, elem(driver_loc, 0))
+         |> assign(:driver_lng, elem(driver_loc, 1))
+         |> assign(:rating_submitted, order.driver_rating != nil)}
     end
   end
 
   # ─── Events ───────────────────────────────────────────────────────────────────
+
+  @impl true
+  def handle_event("submit_rating", %{"rating" => rating, "comment" => comment}, socket) do
+    order = socket.assigns.order
+    rating_int = String.to_integer(rating)
+
+    case Orders.submit_driver_rating(order, rating_int, comment) do
+      {:ok, _updated} ->
+        {:noreply,
+         socket
+         |> assign(:rating_submitted, true)
+         |> put_flash(:info, "Thank you for your feedback!")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to submit rating.")}
+    end
+  end
 
   @impl true
   def handle_info({:order_updated, order}, socket) do
@@ -190,6 +216,26 @@ defmodule RestaurantDashWeb.TrackOrderLive do
             </div>
           <% end %>
 
+          <%!-- Driver Live Map (shown when driver is en route) --%>
+          <%= if @order.status in ["assigned", "picked_up", "out_for_delivery"] and @order.driver_id do %>
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+              <div class="px-6 pt-4 pb-2">
+                <h3 class="font-semibold text-gray-900">Driver Location</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Updates every 10 seconds</p>
+              </div>
+              <div
+                id={"driver-map-#{@order.id}"}
+                phx-hook="DriverTrackingMap"
+                phx-update="ignore"
+                data-order-id={@order.id}
+                data-lat={@driver_lat || 37.7749}
+                data-lng={@driver_lng || -122.4194}
+                data-has-driver={to_string(@driver_lat != nil)}
+                style="height: 280px; width: 100%;"
+              />
+            </div>
+          <% end %>
+
           <%!-- Delivery info --%>
           <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h3 class="font-semibold text-gray-900 mb-3">Delivery Details</h3>
@@ -201,6 +247,51 @@ defmodule RestaurantDashWeb.TrackOrderLive do
               <p class="text-sm text-gray-500">{@order.customer_phone}</p>
             <% end %>
           </div>
+
+          <%!-- Driver Rating (shown after delivery) --%>
+          <%= if @order.status == "delivered" and @order.driver_id do %>
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <%= if @rating_submitted or @order.driver_rating do %>
+                <div class="text-center">
+                  <p class="text-2xl mb-1">⭐</p>
+                  <p class="font-semibold text-gray-900">Thanks for your feedback!</p>
+                  <p class="text-sm text-gray-500 mt-1">
+                    You rated your driver {rating_stars(@order.driver_rating || 5)}
+                  </p>
+                </div>
+              <% else %>
+                <h3 class="font-semibold text-gray-900 mb-4">Rate Your Driver</h3>
+                <.form for={%{}} as={:rating_form} phx-submit="submit_rating">
+                  <div class="flex justify-center gap-2 mb-4">
+                    <%= for star <- 1..5 do %>
+                      <label class="cursor-pointer text-3xl">
+                        <input
+                          type="radio"
+                          name="rating"
+                          value={star}
+                          class="sr-only"
+                          required
+                        />
+                        <span class="hover:scale-110 transition-transform inline-block">⭐</span>
+                      </label>
+                    <% end %>
+                  </div>
+                  <textarea
+                    name="comment"
+                    placeholder="Any comments? (optional)"
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                    rows="2"
+                  />
+                  <button
+                    type="submit"
+                    class="mt-3 w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition"
+                  >
+                    Submit Rating
+                  </button>
+                </.form>
+              <% end %>
+            </div>
+          <% end %>
         </main>
       <% end %>
     </div>
@@ -237,6 +328,21 @@ defmodule RestaurantDashWeb.TrackOrderLive do
       _ -> "—"
     end
   end
+
+  defp get_driver_location(%{driver_id: nil}), do: {nil, nil}
+
+  defp get_driver_location(%{driver_id: driver_id}) when not is_nil(driver_id) do
+    case RestaurantDash.Drivers.LocationCache.get(driver_id) do
+      {:ok, {lat, lng}} -> {lat, lng}
+      :not_found -> {nil, nil}
+    end
+  end
+
+  defp rating_stars(rating) when is_integer(rating) do
+    String.duplicate("⭐", rating)
+  end
+
+  defp rating_stars(_), do: ""
 
   defp decode_modifiers(json) do
     case Jason.decode(json) do
