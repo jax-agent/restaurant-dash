@@ -84,11 +84,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             <a href="/dashboard/orders" class="text-gray-600 hover:text-gray-900 font-medium">
               Orders
             </a>
-            <a
-              href="/dashboard/menu"
-              class="text-gray-400 font-medium cursor-not-allowed"
-              title="Coming soon"
-            >
+            <a href="/dashboard/menu" class="text-gray-600 hover:text-gray-900 font-medium">
               Menu
             </a>
             <a
