@@ -18,7 +18,8 @@ defmodule RestaurantDashWeb.Router do
     pipe_through :browser
 
     live "/", DashboardLive, :index
-    live "/orders/new", DashboardLive, :new
+    live "/orders/new", OrderFormLive, :new
+    live "/orders/:id/edit", OrderFormLive, :edit
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

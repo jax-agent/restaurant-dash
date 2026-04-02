@@ -3,7 +3,6 @@ defmodule RestaurantDashWeb.DashboardLive do
 
   alias RestaurantDash.{Branding, Orders}
   alias RestaurantDash.Orders.Order
-  alias RestaurantDash.Workers.OrderLifecycleWorker
 
   @statuses Order.valid_statuses()
 
@@ -22,69 +21,28 @@ defmodule RestaurantDashWeb.DashboardLive do
       |> assign(:statuses, @statuses)
       |> assign(:status_counts, Orders.count_by_status())
       |> assign(:active_deliveries, filter_active(orders))
-      |> assign(:show_new_order_modal, false)
-      |> assign(:form, to_form(Orders.change_order(%Order{})))
 
     {:ok, socket}
   end
 
   @impl true
   def handle_params(_params, _uri, socket) do
-    live_action = socket.assigns.live_action
-
-    socket =
-      case live_action do
-        :new -> assign(socket, :show_new_order_modal, true)
-        _ -> assign(socket, :show_new_order_modal, false)
-      end
-
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("new_order", _params, socket) do
-    {:noreply, push_patch(socket, to: ~p"/orders/new")}
-  end
+  def handle_event("delete_order", %{"id" => id}, socket) do
+    order = Orders.get_order!(id)
 
-  @impl true
-  def handle_event("close_modal", _params, socket) do
-    {:noreply,
-     socket
-     |> assign(:show_new_order_modal, false)
-     |> assign(:form, to_form(Orders.change_order(%Order{})))
-     |> push_patch(to: ~p"/")}
-  end
+    case Orders.delete_order(order) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Order for #{order.customer_name} deleted.")
+         |> reload_orders()}
 
-  @impl true
-  def handle_event("validate", %{"order" => order_params}, socket) do
-    changeset =
-      %Order{}
-      |> Orders.change_order(normalize_params(order_params))
-      |> Map.put(:action, :validate)
-
-    {:noreply, assign(socket, :form, to_form(changeset))}
-  end
-
-  @impl true
-  def handle_event("save_order", %{"order" => order_params}, socket) do
-    params = normalize_params(order_params)
-
-    case Orders.create_order(params) do
-      {:ok, order} ->
-        # Schedule the lifecycle pipeline
-        OrderLifecycleWorker.schedule_for(order)
-
-        socket =
-          socket
-          |> put_flash(:info, "Order created for #{order.customer_name}! 🎉")
-          |> assign(:show_new_order_modal, false)
-          |> assign(:form, to_form(Orders.change_order(%Order{})))
-          |> push_patch(to: ~p"/")
-
-        {:noreply, socket}
-
-      {:error, changeset} ->
-        {:noreply, assign(socket, :form, to_form(changeset))}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to delete order.")}
     end
   end
 
@@ -102,7 +60,6 @@ defmodule RestaurantDashWeb.DashboardLive do
 
   @impl true
   def handle_info({:order_position_updated, order}, socket) do
-    # Push updated position to the map JS hook
     socket =
       push_event(socket, "update_marker", %{
         id: order.id,
@@ -143,23 +100,6 @@ defmodule RestaurantDashWeb.DashboardLive do
       logo_url: Branding.logo_url()
     }
   end
-
-  defp normalize_params(params), do: assign_random_sf_coords(params)
-
-  # Assign random SF-area coordinates for demo (no real geocoding)
-  defp assign_random_sf_coords(params) do
-    {lat, lng} = random_sf_coords()
-    params |> Map.put("lat", lat) |> Map.put("lng", lng)
-  end
-
-  defp random_sf_coords do
-    # SF bounding box: roughly 37.70-37.81 lat, -122.52 to -122.37 lng
-    lat = 37.70 + :rand.uniform() * 0.11
-    lng = -122.52 + :rand.uniform() * 0.15
-    {Float.round(lat, 6), Float.round(lng, 6)}
-  end
-
-  # ─── Template helpers (imported into template scope) ──────────────────────
 
   defp humanize_status("new"), do: "New"
   defp humanize_status("preparing"), do: "Preparing"

@@ -12,13 +12,7 @@
       <span class="header-logo">{@branding.logo_url}</span>
       <span class="header-name" id="restaurant-name">{@branding.restaurant_name}</span>
     </div>
-    <button
-      class="btn-new-order"
-      phx-click="new_order"
-      id="new-order-btn"
-    >
-      + New Order
-    </button>
+    <a href="/orders/new" class="btn-new-order" style="text-decoration:none;">+ New Order</a>
   </div>
 </header>
 
@@ -65,6 +59,19 @@
                 <%= if order.phone do %>
                   <div class="card-phone">{order.phone}</div>
                 <% end %>
+                <div class="card-actions">
+                  <a href={"/orders/#{order.id}/edit"} class="card-action-btn card-edit-btn">
+                    ✏️ Edit
+                  </a>
+                  <button
+                    phx-click="delete_order"
+                    phx-value-id={order.id}
+                    data-confirm={"Delete order for #{order.customer_name}?"}
+                    class="card-action-btn card-delete-btn"
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
               </div>
             <% end %>
             <%= if Enum.empty?(Map.get(@orders, status, [])) do %>
@@ -94,52 +101,3 @@
 <%!-- Flash Messages --%>
 <.flash kind={:info} flash={@flash} />
 <.flash kind={:error} flash={@flash} />
-
-<%!-- New Order Modal --%>
-<%= if @show_new_order_modal do %>
-  <div class="order-modal-overlay" phx-click="close_modal">
-    <div class="order-modal" onclick="event.stopPropagation()">
-      <div class="order-modal-header">
-        <h2 class="order-modal-title">New Order</h2>
-        <button class="order-modal-close" phx-click="close_modal">&times;</button>
-      </div>
-
-      <.form for={@form} phx-change="validate" phx-submit="save_order" class="order-form">
-        <div class="form-field">
-          <label class="form-label">Customer Name *</label>
-          <.input field={@form[:customer_name]} type="text" placeholder="Jane Smith" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Phone</label>
-          <.input field={@form[:phone]} type="tel" placeholder="(415) 555-0100" />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Delivery Address</label>
-          <.input
-            field={@form[:delivery_address]}
-            type="text"
-            placeholder="123 Main St, San Francisco, CA"
-          />
-        </div>
-
-        <div class="form-field">
-          <label class="form-label">Items (one per line) *</label>
-          <.input
-            field={@form[:items_text]}
-            type="textarea"
-            placeholder="Margherita Pizza\nGarlic Bread\nSoda"
-          />
-        </div>
-
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" phx-click="close_modal">Cancel</button>
-          <button type="submit" class="btn-submit" style="background-color: var(--primary);">
-            Place Order
-          </button>
-        </div>
-      </.form>
-    </div>
-  </div>
-<% end %>

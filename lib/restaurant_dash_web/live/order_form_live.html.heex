@@ -1,0 +1,75 @@
+<style>
+  :root { --primary: <%= @branding.primary_color %>; }
+</style>
+
+<header class="dashboard-header" style="background-color: var(--primary);">
+  <div class="header-inner">
+    <div class="header-brand">
+      <span class="header-logo">{@branding.logo_url}</span>
+      <span class="header-name">{@branding.restaurant_name}</span>
+    </div>
+    <a href="/" class="btn-new-order" style="text-decoration:none;">← Back to Dashboard</a>
+  </div>
+</header>
+
+<div style="max-width: 560px; margin: 2rem auto; padding: 0 1rem;">
+  <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem;">
+    <h1 style="margin: 0 0 1.5rem; font-size: 1.5rem; font-weight: 700; color: #1a1a2e;">
+      {@page_title}
+    </h1>
+
+    <.form for={@form} phx-change="validate" phx-submit="save_order">
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.375rem;">
+          Customer Name *
+        </label>
+        <.input field={@form[:customer_name]} type="text" placeholder="Jane Smith" />
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.375rem;">
+          Phone
+        </label>
+        <.input field={@form[:phone]} type="tel" placeholder="(415) 555-0100" />
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.375rem;">
+          Delivery Address
+        </label>
+        <.input
+          field={@form[:delivery_address]}
+          type="text"
+          placeholder="123 Main St, San Francisco, CA"
+        />
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label style="display: block; font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 0.375rem;">
+          Items (one per line) *
+        </label>
+        <.input
+          field={@form[:items_text]}
+          type="textarea"
+          placeholder={"Margherita Pizza\nGarlic Bread\nSoda"}
+          rows="4"
+        />
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+        <a
+          href="/"
+          style="display: inline-flex; align-items: center; padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem; color: #6b7280; background: #f3f4f6; text-decoration: none;"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          style={"display: inline-flex; align-items: center; padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.875rem; color: white; background: #{@branding.primary_color}; border: none; cursor: pointer;"}
+        >
+          {if @live_action == :new, do: "Place Order", else: "Update Order"}
+        </button>
+      </div>
+    </.form>
+  </div>
+</div>

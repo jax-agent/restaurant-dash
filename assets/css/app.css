@@ -354,6 +354,36 @@ body {
   color: var(--gray-400);
 }
 
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+.card-action-btn {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid var(--gray-200);
+  background: white;
+  color: var(--gray-600);
+  transition: background 0.15s;
+}
+
+.card-action-btn:hover {
+  background: var(--gray-50);
+}
+
+.card-delete-btn:hover {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
 .empty-col {
   text-align: center;
   padding: 1.5rem 0.5rem;
