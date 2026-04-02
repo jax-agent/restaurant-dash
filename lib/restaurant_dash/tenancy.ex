@@ -58,6 +58,16 @@ defmodule RestaurantDash.Tenancy do
     Restaurant.changeset(restaurant, attrs)
   end
 
+  # ─── User helpers ──────────────────────────────────────────────────────────
+
+  @doc "Returns user IDs for all owners of a restaurant."
+  def list_owner_user_ids(restaurant_id) do
+    RestaurantDash.Accounts.User
+    |> where([u], u.restaurant_id == ^restaurant_id and u.role == "owner")
+    |> select([u], u.id)
+    |> Repo.all()
+  end
+
   # ─── Slug helpers ──────────────────────────────────────────────────────────
 
   @doc "Generates a URL-safe slug from a name."

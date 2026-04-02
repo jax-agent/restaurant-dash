@@ -9,7 +9,7 @@ defmodule RestaurantDashWeb.TrackOrderLive do
   """
   use RestaurantDashWeb, :live_view
 
-  alias RestaurantDash.{Orders, Tenancy}
+  alias RestaurantDash.{Orders, Tenancy, Drivers}
 
   @timeline_steps [
     {"new", "Order Placed", "✅", "We received your order!"},
@@ -32,6 +32,9 @@ defmodule RestaurantDashWeb.TrackOrderLive do
          |> assign(:not_found, true)
          |> assign(:driver_lat, nil)
          |> assign(:driver_lng, nil)
+         |> assign(:driver_profile, nil)
+         |> assign(:restaurant, nil)
+         |> assign(:timeline_steps, @timeline_steps)
          |> assign(:rating_submitted, false)}
 
       order ->
@@ -40,6 +43,7 @@ defmodule RestaurantDashWeb.TrackOrderLive do
         end
 
         restaurant = order.restaurant_id && Tenancy.get_restaurant(order.restaurant_id)
+        driver_profile = order.driver_id && Drivers.get_profile_by_user_id(order.driver_id)
 
         # Seed driver location from ETS cache if available
         driver_loc = get_driver_location(order)
@@ -48,6 +52,7 @@ defmodule RestaurantDashWeb.TrackOrderLive do
          socket
          |> assign(:order, order)
          |> assign(:restaurant, restaurant)
+         |> assign(:driver_profile, driver_profile)
          |> assign(:not_found, false)
          |> assign(:timeline_steps, @timeline_steps)
          |> assign(:driver_lat, elem(driver_loc, 0))
@@ -80,7 +85,15 @@ defmodule RestaurantDashWeb.TrackOrderLive do
     if order.id == socket.assigns.order.id do
       # Reload with order_items
       updated = Orders.get_order_with_items!(order.id)
-      {:noreply, assign(socket, :order, updated)}
+      driver_profile = updated.driver_id && Drivers.get_profile_by_user_id(updated.driver_id)
+      driver_loc = get_driver_location(updated)
+
+      {:noreply,
+       socket
+       |> assign(:order, updated)
+       |> assign(:driver_profile, driver_profile)
+       |> assign(:driver_lat, elem(driver_loc, 0))
+       |> assign(:driver_lng, elem(driver_loc, 1))}
     else
       {:noreply, socket}
     end
@@ -217,7 +230,7 @@ defmodule RestaurantDashWeb.TrackOrderLive do
           <% end %>
 
           <%!-- Driver Live Map (shown when driver is en route) --%>
-          <%= if @order.status in ["assigned", "picked_up", "out_for_delivery"] and @order.driver_id do %>
+          <%= if @order.status in ["assigned", "picked_up", "out_for_delivery"] && @order.driver_id do %>
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div class="px-6 pt-4 pb-2">
                 <h3 class="font-semibold text-gray-900">Driver Location</h3>
@@ -236,6 +249,76 @@ defmodule RestaurantDashWeb.TrackOrderLive do
             </div>
           <% end %>
 
+          <%!-- Driver Info Card (shown when driver assigned, no phone for privacy) --%>
+          <%= if @order.driver_id && @order.status in ["assigned", "picked_up", "out_for_delivery"] do %>
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <h3 class="font-semibold text-gray-900 mb-4">Your Driver</h3>
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">
+                  🚗
+                </div>
+                <div class="flex-1">
+                  <%= if @driver_profile do %>
+                    <p class="font-medium text-gray-900">
+                      {vehicle_type_label(@driver_profile.vehicle_type)}
+                    </p>
+                    <%= if @driver_profile.license_plate do %>
+                      <p class="text-sm text-gray-500">{@driver_profile.license_plate}</p>
+                    <% end %>
+                  <% else %>
+                    <p class="font-medium text-gray-900">Driver En Route</p>
+                    <p class="text-sm text-gray-500">Your driver is on the way</p>
+                  <% end %>
+                </div>
+                <div class="text-right">
+                  <div class="text-xs text-gray-400 uppercase tracking-wide">Status</div>
+                  <div class="text-sm font-semibold text-blue-600 mt-0.5">
+                    {humanize_delivery_status(@order.status)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+
+          <%!-- Restaurant Info --%>
+          <%= if @restaurant do %>
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              <h3 class="font-semibold text-gray-900 mb-3">Restaurant</h3>
+              <p class="text-sm font-medium text-gray-900">{@restaurant.name}</p>
+              <%= if @restaurant.address do %>
+                <p class="text-sm text-gray-500 mt-1">
+                  {@restaurant.address}
+                  <%= if @restaurant.city do %>
+                    , {@restaurant.city}
+                  <% end %>
+                </p>
+              <% end %>
+              <%= if @restaurant.phone do %>
+                <a
+                  href={"tel:#{@restaurant.phone}"}
+                  class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 mt-2"
+                >
+                  📞 {@restaurant.phone}
+                </a>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%!-- Need Help? --%>
+          <div class="bg-gray-50 rounded-2xl border border-gray-200 p-6 text-center">
+            <p class="text-sm font-medium text-gray-700 mb-3">Having an issue with your order?</p>
+            <%= if @restaurant && @restaurant.phone do %>
+              <a
+                href={"tel:#{@restaurant.phone}"}
+                class="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 rounded-xl px-5 py-2.5 text-sm font-medium hover:bg-gray-50 transition shadow-sm"
+              >
+                📞 Call Restaurant
+              </a>
+            <% else %>
+              <p class="text-sm text-gray-500">Please contact the restaurant directly.</p>
+            <% end %>
+          </div>
+
           <%!-- Delivery info --%>
           <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
             <h3 class="font-semibold text-gray-900 mb-3">Delivery Details</h3>
@@ -249,7 +332,7 @@ defmodule RestaurantDashWeb.TrackOrderLive do
           </div>
 
           <%!-- Driver Rating (shown after delivery) --%>
-          <%= if @order.status == "delivered" and @order.driver_id do %>
+          <%= if @order.status == "delivered" && @order.driver_id do %>
             <div class="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
               <%= if @rating_submitted or @order.driver_rating do %>
                 <div class="text-center">
@@ -328,6 +411,19 @@ defmodule RestaurantDashWeb.TrackOrderLive do
       _ -> "—"
     end
   end
+
+  defp vehicle_type_label("car"), do: "Car Delivery"
+  defp vehicle_type_label("bike"), do: "Bike Delivery"
+  defp vehicle_type_label("motorcycle"), do: "Motorcycle Delivery"
+  defp vehicle_type_label("van"), do: "Van Delivery"
+  defp vehicle_type_label(_), do: "Driver"
+
+  defp humanize_delivery_status("assigned"), do: "Heading to pickup"
+  defp humanize_delivery_status("picked_up"), do: "Order picked up"
+  defp humanize_delivery_status("out_for_delivery"), do: "On the way!"
+
+  defp humanize_delivery_status(status),
+    do: String.replace(status, "_", " ") |> String.capitalize()
 
   defp get_driver_location(%{driver_id: nil}), do: {nil, nil}
 

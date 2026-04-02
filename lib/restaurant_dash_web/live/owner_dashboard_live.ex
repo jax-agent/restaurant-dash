@@ -94,6 +94,24 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
               Settings
             </a>
             <a
+              href="/dashboard/notifications"
+              class="text-gray-600 hover:text-gray-900 font-medium"
+            >
+              Alerts
+            </a>
+            <%!-- Notification Bell --%>
+            <div
+              class="rounded-full p-1"
+              style={"background-color: #{@restaurant.primary_color}"}
+            >
+              <.live_component
+                module={RestaurantDashWeb.NotificationBellLive}
+                id="notification-bell"
+                restaurant_id={@restaurant.id}
+                user_id={@current_user.id}
+              />
+            </div>
+            <a
               href="/users/log-out"
               data-method="delete"
               class="text-red-500 hover:text-red-700 font-medium"

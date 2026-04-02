@@ -76,7 +76,15 @@ config :phoenix, :json_library, Jason
 # Configure Oban
 config :restaurant_dash, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5, clover: 5, square: 5],
+  queues: [
+    default: 10,
+    orders: 5,
+    drivers: 5,
+    dispatch: 5,
+    clover: 5,
+    square: 5,
+    notifications: 10
+  ],
   repo: RestaurantDash.Repo,
   plugins: [
     {Oban.Plugins.Cron,
@@ -109,6 +117,12 @@ config :restaurant_dash, :square,
   app_secret: System.get_env("SQUARE_APP_SECRET"),
   webhook_signature_key: System.get_env("SQUARE_WEBHOOK_SIGNATURE_KEY"),
   env: if(System.get_env("SQUARE_ENV") == "production", do: :production, else: :sandbox)
+
+# Twilio SMS configuration (mock mode when no credentials configured)
+config :restaurant_dash, :twilio,
+  account_sid: System.get_env("TWILIO_ACCOUNT_SID"),
+  auth_token: System.get_env("TWILIO_AUTH_TOKEN"),
+  from_number: System.get_env("TWILIO_FROM_NUMBER")
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

@@ -32,6 +32,9 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :square_location_id, :string
     field :square_connected_at, :utc_datetime
 
+    # Phase 10: Notification preferences
+    field :notification_preferences, :map, default: %{}
+
     # Phase 7: Delivery fee settings
     field :fee_mode, :string, default: "flat"
     field :base_delivery_fee, :integer, default: 299
@@ -67,7 +70,8 @@ defmodule RestaurantDash.Tenancy.Restaurant do
       :per_mile_rate,
       :free_delivery_threshold,
       :driver_base_pay,
-      :driver_per_mile_pay
+      :driver_per_mile_pay,
+      :notification_preferences
     ])
     |> validate_required([:name, :slug])
     |> validate_length(:name, min: 2, max: 100)

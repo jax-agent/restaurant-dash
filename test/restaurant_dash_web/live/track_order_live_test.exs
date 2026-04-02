@@ -75,13 +75,36 @@ defmodule RestaurantDashWeb.TrackOrderLiveTest do
       {:ok, view, _html} = live(conn, "/orders/#{order.id}/track")
 
       # Simulate status update
-      {:ok, updated_order} = Orders.transition_order(order, "preparing")
+      {:ok, _updated_order} = Orders.transition_order(order, "preparing")
 
       # Give it a moment to process
       Process.sleep(50)
 
       html = render(view)
       assert html =~ "Preparing"
+    end
+  end
+
+  describe "restaurant info section" do
+    test "shows restaurant contact info", %{conn: conn, order: order, restaurant: restaurant} do
+      # Update restaurant with phone
+      {:ok, _r} = Tenancy.update_restaurant(restaurant, %{phone: "(415) 555-1234"})
+
+      {:ok, _view, html} = live(conn, "/orders/#{order.id}/track")
+      assert html =~ "Restaurant"
+      assert html =~ "Track Test Restaurant"
+    end
+
+    test "shows Need help section", %{conn: conn, order: order} do
+      {:ok, _view, html} = live(conn, "/orders/#{order.id}/track")
+      assert html =~ "Having an issue"
+    end
+  end
+
+  describe "driver info card" do
+    test "does not show driver card when no driver assigned", %{conn: conn, order: order} do
+      {:ok, _view, html} = live(conn, "/orders/#{order.id}/track")
+      refute html =~ "Your Driver"
     end
   end
 end
