@@ -15,7 +15,7 @@ defmodule RestaurantDashWeb.KitchenLive do
 
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
-  alias RestaurantDash.{Kitchen, Orders, Tenancy}
+  alias RestaurantDash.{Kitchen, Orders, Drivers, Tenancy}
   alias RestaurantDash.Orders.Order
 
   @kds_statuses Order.kds_statuses()
@@ -45,6 +45,7 @@ defmodule RestaurantDashWeb.KitchenLive do
           |> assign(:show_modal, false)
           |> assign(:audio_ready, false)
           |> assign(:now, DateTime.utc_now())
+          |> assign(:available_drivers, Drivers.list_available_drivers())
           |> load_orders(restaurant.id)
 
         {:ok, socket}
@@ -139,6 +140,28 @@ defmodule RestaurantDashWeb.KitchenLive do
   def handle_event("print_order", %{"id" => _id}, socket) do
     # Triggers browser print dialog via JS hook
     {:noreply, push_event(socket, "print_order", %{})}
+  end
+
+  @impl true
+  def handle_event("assign_driver", %{"order_id" => order_id, "driver_id" => driver_id}, socket) do
+    with {:ok, order} <- fetch_restaurant_order(order_id, socket),
+         driver_id_int <- String.to_integer(driver_id),
+         {:ok, _order} <- Orders.assign_driver(order, driver_id_int),
+         driver_profile <- Drivers.get_profile_by_user_id(driver_id_int),
+         {:ok, _} <-
+           if(driver_profile,
+             do: Drivers.set_status(driver_profile, "on_delivery"),
+             else: {:ok, nil}
+           ) do
+      {:noreply,
+       socket
+       |> put_flash(:info, "Driver assigned!")
+       |> assign(:available_drivers, Drivers.list_available_drivers())
+       |> reload_orders()}
+    else
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, to_string(reason))}
+    end
   end
 
   # ─── PubSub ──────────────────────────────────────────────────────────────

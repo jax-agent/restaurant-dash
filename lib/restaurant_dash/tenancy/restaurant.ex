@@ -16,6 +16,9 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :timezone, :string, default: "America/Chicago"
     field :is_active, :boolean, default: true
     field :stripe_account_id, :string
+    field :auto_dispatch_enabled, :boolean, default: false
+    field :lat, :float
+    field :lng, :float
 
     has_many :orders, RestaurantDash.Orders.Order
 

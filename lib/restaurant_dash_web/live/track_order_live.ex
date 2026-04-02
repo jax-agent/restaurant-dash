@@ -14,6 +14,8 @@ defmodule RestaurantDashWeb.TrackOrderLive do
   @timeline_steps [
     {"new", "Order Placed", "✅", "We received your order!"},
     {"preparing", "Preparing", "👨‍🍳", "The kitchen is making your order"},
+    {"assigned", "Driver Assigned", "🚗", "A driver is on the way to pick up your order"},
+    {"picked_up", "Picked Up", "🛵", "Your order has been picked up!"},
     {"out_for_delivery", "Out for Delivery", "🛵", "Your order is on the way!"},
     {"delivered", "Delivered", "🎉", "Enjoy your meal!"}
   ]

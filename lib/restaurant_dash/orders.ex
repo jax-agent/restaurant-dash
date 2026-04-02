@@ -132,6 +132,80 @@ defmodule RestaurantDash.Orders do
   end
 
   @doc """
+  Assign a driver to a ready order.
+  Sets order status to "assigned" and records assigned_at timestamp.
+  """
+  def assign_driver(%Order{} = order, driver_id) do
+    order
+    |> Order.assign_driver_changeset(driver_id)
+    |> Repo.update()
+    |> tap_broadcast(:order_updated)
+  end
+
+  @doc """
+  Update delivery status (picked_up or delivered).
+  For use by drivers to update their delivery progress.
+  """
+  def update_delivery_status(%Order{} = order, status)
+      when status in ["picked_up", "out_for_delivery", "delivered"] do
+    order
+    |> Order.delivery_transition_changeset(status)
+    |> Repo.update()
+    |> tap_broadcast(:order_updated)
+  end
+
+  @doc "List orders assigned to a specific driver."
+  def list_driver_orders(driver_id) do
+    Order
+    |> where([o], o.driver_id == ^driver_id)
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+    |> Repo.preload(:order_items)
+  end
+
+  @doc "Get the current active delivery for a driver (assigned or picked_up)."
+  def get_active_delivery(driver_id) do
+    Order
+    |> where([o], o.driver_id == ^driver_id and o.status in ["assigned", "picked_up"])
+    |> order_by([o], desc: o.inserted_at)
+    |> limit(1)
+    |> Repo.one()
+    |> case do
+      nil -> nil
+      order -> Repo.preload(order, :order_items)
+    end
+  end
+
+  @doc "List orders in the dispatch queue (status: ready, no driver assigned)."
+  def list_dispatch_queue(restaurant_id \\ nil) do
+    Order
+    |> where([o], o.status == "ready" and is_nil(o.driver_id))
+    |> scope_by_restaurant(restaurant_id)
+    |> order_by([o], asc: o.ready_at)
+    |> Repo.all()
+  end
+
+  @doc "Count today's deliveries for a driver."
+  def count_driver_deliveries_today(driver_id) do
+    today_start = DateTime.utc_now() |> DateTime.to_date() |> DateTime.new!(~T[00:00:00])
+
+    Order
+    |> where([o], o.driver_id == ^driver_id and o.status == "delivered")
+    |> where([o], o.delivered_at >= ^today_start)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  @doc "Sum today's tips for a driver."
+  def sum_driver_tips_today(driver_id) do
+    today_start = DateTime.utc_now() |> DateTime.to_date() |> DateTime.new!(~T[00:00:00])
+
+    Order
+    |> where([o], o.driver_id == ^driver_id and o.status == "delivered")
+    |> where([o], o.delivered_at >= ^today_start)
+    |> Repo.aggregate(:sum, :tip_amount) || 0
+  end
+
+  @doc """
   Create an order from a cart + customer info. Wraps in a transaction.
 
   attrs must include:

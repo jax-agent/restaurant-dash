@@ -2,9 +2,9 @@ defmodule RestaurantDash.Orders.Order do
   use Ecto.Schema
   import Ecto.Changeset
 
-  # Full lifecycle: new → accepted → preparing → ready → out_for_delivery → delivered
+  # Full lifecycle: new → accepted → preparing → ready → assigned → picked_up → out_for_delivery → delivered
   # cancelled: terminal rejection state (can come from any active state)
-  @valid_statuses ~w(new accepted preparing ready out_for_delivery delivered cancelled)
+  @valid_statuses ~w(new accepted preparing ready assigned picked_up out_for_delivery delivered cancelled)
 
   # Statuses that are shown on the KDS board (not terminal)
   @kds_statuses ~w(new accepted preparing ready)
@@ -39,7 +39,13 @@ defmodule RestaurantDash.Orders.Order do
     field :estimated_prep_minutes, :integer
     field :kds_managed, :boolean, default: false
 
+    # Phase 6: Driver/delivery fields
+    field :assigned_at, :utc_datetime
+    field :picked_up_at, :utc_datetime
+    field :delivered_at, :utc_datetime
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
+    belongs_to :driver, RestaurantDash.Accounts.User
     has_many :order_items, RestaurantDash.Orders.OrderItem
 
     timestamps(type: :utc_datetime)
@@ -126,7 +132,46 @@ defmodule RestaurantDash.Orders.Order do
       end)
 
     order
-    |> cast(attrs, [:status, :kds_managed, :accepted_at, :preparing_at, :ready_at])
+    |> cast(attrs, [
+      :status,
+      :kds_managed,
+      :accepted_at,
+      :preparing_at,
+      :ready_at,
+      :assigned_at,
+      :picked_up_at,
+      :delivered_at
+    ])
+    |> validate_inclusion(:status, @valid_statuses)
+  end
+
+  @doc "Changeset for driver assignment."
+  def assign_driver_changeset(order, driver_id) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    order
+    |> cast(%{driver_id: driver_id, status: "assigned", assigned_at: now}, [
+      :driver_id,
+      :status,
+      :assigned_at
+    ])
+    |> validate_required([:driver_id])
+    |> validate_inclusion(:status, @valid_statuses)
+  end
+
+  @doc "Changeset for driver delivery status updates (picked_up, delivered)."
+  def delivery_transition_changeset(order, status) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    timestamp_field = timestamp_for_status(status)
+
+    attrs =
+      %{status: status}
+      |> then(fn a ->
+        if timestamp_field, do: Map.put(a, timestamp_field, now), else: a
+      end)
+
+    order
+    |> cast(attrs, [:status, :picked_up_at, :delivered_at])
     |> validate_inclusion(:status, @valid_statuses)
   end
 
@@ -144,6 +189,9 @@ defmodule RestaurantDash.Orders.Order do
   defp timestamp_for_status("accepted"), do: :accepted_at
   defp timestamp_for_status("preparing"), do: :preparing_at
   defp timestamp_for_status("ready"), do: :ready_at
+  defp timestamp_for_status("assigned"), do: :assigned_at
+  defp timestamp_for_status("picked_up"), do: :picked_up_at
+  defp timestamp_for_status("delivered"), do: :delivered_at
   defp timestamp_for_status(_), do: nil
 
   defp validate_items_present(changeset) do

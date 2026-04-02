@@ -52,6 +52,11 @@ defmodule RestaurantDashWeb.Router do
     # Phase 3: Customer ordering
     live "/checkout", CheckoutLive, :index
     live "/orders/:id/track", TrackOrderLive, :show
+
+    # Phase 6: Driver management
+    live "/drivers/signup", DriverSignupLive, :new
+    live "/dashboard/drivers", DriversDashboardLive, :index
+    live "/driver/dashboard", DriverDashboardLive, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

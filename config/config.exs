@@ -76,7 +76,7 @@ config :phoenix, :json_library, Jason
 # Configure Oban
 config :restaurant_dash, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, orders: 5, drivers: 5],
+  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5],
   repo: RestaurantDash.Repo,
   plugins: [
     {Oban.Plugins.Cron,

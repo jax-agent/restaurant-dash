@@ -68,10 +68,21 @@ defmodule RestaurantDash.Kitchen do
 
   @doc "Mark order ready for pickup — moves from 'preparing' to 'ready'."
   def mark_ready(%Order{status: "preparing"} = order) do
-    order
-    |> Order.kds_transition_changeset("ready")
-    |> Repo.update()
-    |> tap_broadcast(:order_updated)
+    result =
+      order
+      |> Order.kds_transition_changeset("ready")
+      |> Repo.update()
+      |> tap_broadcast(:order_updated)
+
+    case result do
+      {:ok, updated_order} ->
+        # Trigger auto-dispatch if enabled for this restaurant
+        RestaurantDash.Workers.AutoDispatchWorker.schedule_for(updated_order)
+        result
+
+      _ ->
+        result
+    end
   end
 
   def mark_ready(%Order{status: status}) do
