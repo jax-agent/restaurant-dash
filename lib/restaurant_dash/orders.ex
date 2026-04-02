@@ -98,7 +98,12 @@ defmodule RestaurantDash.Orders do
   # ─── Private ───────────────────────────────────────────────────────────────
 
   defp tap_broadcast({:ok, order} = result, event) do
-    broadcast(event, order)
+    # Guard against PubSub not being started (e.g. in Release.eval context)
+    try do
+      broadcast(event, order)
+    rescue
+      ArgumentError -> :ok
+    end
     result
   end
 
