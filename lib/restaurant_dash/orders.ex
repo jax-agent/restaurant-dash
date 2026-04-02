@@ -139,8 +139,9 @@ defmodule RestaurantDash.Orders do
 
   Returns {:ok, order} with preloaded order_items, or {:error, changeset}.
   """
-  def create_order_from_cart(%Cart{} = cart, attrs) do
-    totals = Cart.calculate_totals(cart)
+  def create_order_from_cart(%Cart{} = cart, attrs, opts \\ []) do
+    tip = Keyword.get(opts, :tip, 0)
+    totals = Cart.calculate_totals(cart, tip: tip)
 
     order_attrs =
       attrs

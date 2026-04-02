@@ -64,7 +64,7 @@ defmodule RestaurantDashWeb.CheckoutLiveTest do
 
       {:ok, view, _html} = live(conn, "/checkout?restaurant_slug=#{restaurant.slug}")
 
-      html = view |> element("button", "Continue to Review") |> render_click()
+      html = view |> element("button", "Continue to Review →") |> render_click()
 
       assert html =~ "required"
     end
@@ -103,7 +103,7 @@ defmodule RestaurantDashWeb.CheckoutLiveTest do
       |> element("[name=delivery_address]")
       |> render_change(%{"field" => "delivery_address", "value" => "123 Main St"})
 
-      html = view |> element("button", "Continue to Review") |> render_click()
+      html = view |> element("button", "Continue to Review →") |> render_click()
 
       assert html =~ "Order Summary"
       assert html =~ "Margherita Pizza"
@@ -133,7 +133,7 @@ defmodule RestaurantDashWeb.CheckoutLiveTest do
       |> element("[name=delivery_address]")
       |> render_change(%{"field" => "delivery_address", "value" => "456 Oak Ave"})
 
-      view |> element("button", "Continue to Review") |> render_click()
+      view |> element("button", "Continue to Review →") |> render_click()
 
       html = render(view)
       assert html =~ "Margherita Pizza"
@@ -163,7 +163,7 @@ defmodule RestaurantDashWeb.CheckoutLiveTest do
       |> element("[name=delivery_address]")
       |> render_change(%{"field" => "delivery_address", "value" => "456 Oak Ave"})
 
-      view |> element("button", "Continue to Review") |> render_click()
+      view |> element("button", "Continue to Review →") |> render_click()
 
       html = view |> element("button", "← Back") |> render_click()
       assert html =~ "Delivery Details"
@@ -197,12 +197,13 @@ defmodule RestaurantDashWeb.CheckoutLiveTest do
       |> element("[name=delivery_address]")
       |> render_change(%{"field" => "delivery_address", "value" => "789 Pine Rd"})
 
-      view |> element("button", "Continue to Review") |> render_click()
-      view |> element("button", "Looks Good") |> render_click()
+      view |> element("button", "Continue to Review →") |> render_click()
+      view |> element("button", "Continue to Payment →") |> render_click()
+      view |> element("button", "Review Order →") |> render_click()
 
       # Place order — expect redirect
       assert {:error, {:redirect, %{to: "/orders/" <> _}}} =
-               view |> element("button", "Place Order") |> render_click()
+               view |> element("button", "Place Order 🎉") |> render_click()
     end
   end
 end
