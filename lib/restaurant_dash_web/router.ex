@@ -22,6 +22,7 @@ defmodule RestaurantDashWeb.Router do
     pipe_through :browser
 
     live "/", LandingLive, :index
+    live "/menu", PublicMenuLive, :index
     live "/signup", OnboardingLive, :new
 
     # Owner dashboard
