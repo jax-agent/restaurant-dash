@@ -59,6 +59,13 @@ defmodule RestaurantDashWeb.Router do
     live "/dashboard/drivers", DriversDashboardLive, :index
     live "/driver/dashboard", DriverDashboardLive, :index
 
+    # Phase 11: Analytics
+    live "/dashboard/analytics/sales", AnalyticsSalesLive, :index
+    live "/dashboard/analytics/items", AnalyticsItemsLive, :index
+    live "/dashboard/analytics/delivery", AnalyticsDeliveryLive, :index
+    live "/dashboard/analytics/customers", AnalyticsCustomersLive, :index
+    get "/dashboard/analytics/sales/export", AnalyticsExportController, :sales_csv
+
     # Phase 8: Clover OAuth callback
     get "/dashboard/settings/clover/callback", CloverOAuthController, :callback
 

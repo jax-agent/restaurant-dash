@@ -73,24 +73,26 @@ config :logger, :default_formatter,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Configure Oban
+# Configure Oban — keep worker counts low to stay within PG connection limits
+# Fly PG small allows ~20 connections; 2 app machines × pool_size 5 = 10 for app
+# Oban shares the same pool, so keep total concurrency modest
 config :restaurant_dash, Oban,
   engine: Oban.Engines.Basic,
   queues: [
-    default: 10,
-    orders: 5,
-    drivers: 5,
-    dispatch: 5,
-    clover: 5,
-    square: 5,
-    notifications: 10
+    default: 3,
+    orders: 2,
+    drivers: 2,
+    dispatch: 2,
+    clover: 1,
+    square: 1,
+    notifications: 3
   ],
   repo: RestaurantDash.Repo,
   plugins: [
     {Oban.Plugins.Cron,
      crontab: [
-       # Driver simulation every 30 seconds
-       {"*/1 * * * *", RestaurantDash.Workers.DriverSimulationWorker},
+       # Driver simulation every 2 minutes (was every 1 min — reduce DB pressure)
+       {"*/2 * * * *", RestaurantDash.Workers.DriverSimulationWorker},
        # Clover inventory sync every 5 minutes
        {"*/5 * * * *", RestaurantDash.Workers.CloverInventorySyncWorker},
        # Square inventory sync every 5 minutes
