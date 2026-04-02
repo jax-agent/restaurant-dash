@@ -1,9 +1,11 @@
 alias RestaurantDash.{Menu, Orders, Repo, Tenancy}
-alias RestaurantDash.Menu.{Category, Item}
+alias RestaurantDash.Menu.{Category, Item, Modifier, ModifierGroup}
 alias RestaurantDash.Orders.Order
 alias RestaurantDash.Tenancy.Restaurant
 
 # Clear existing data (order matters due to FK constraints)
+Repo.delete_all(Modifier)
+Repo.delete_all(ModifierGroup)
 Repo.delete_all(Item)
 Repo.delete_all(Category)
 Repo.delete_all(Order)
@@ -204,6 +206,72 @@ IO.puts("✅ Seeded 2 demo restaurants")
 
 IO.puts("✅ Seeded Sal's Pizza menu (3 categories, 13 items)")
 
+# ─── Sal's Pizza Modifier Groups ─────────────────────────────────────────────
+
+{:ok, pizza_sizes} =
+  Menu.create_modifier_group(%{
+    restaurant_id: sals.id,
+    name: "Size",
+    min_selections: 1,
+    max_selections: 1
+  })
+
+{:ok, _} =
+  Menu.create_modifier(%{
+    modifier_group_id: pizza_sizes.id,
+    name: "Small (10\")",
+    price_adjustment: 0,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_modifier(%{
+    modifier_group_id: pizza_sizes.id,
+    name: "Medium (14\")",
+    price_adjustment: 300,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_modifier(%{
+    modifier_group_id: pizza_sizes.id,
+    name: "Large (18\")",
+    price_adjustment: 600,
+    position: 30
+  })
+
+{:ok, pizza_toppings} =
+  Menu.create_modifier_group(%{
+    restaurant_id: sals.id,
+    name: "Extra Toppings",
+    min_selections: 0,
+    max_selections: nil
+  })
+
+toppings = [
+  "Pepperoni",
+  "Mushrooms",
+  "Bell Peppers",
+  "Black Olives",
+  "Onions",
+  "Jalapeños",
+  "Extra Cheese"
+]
+
+toppings
+|> Enum.with_index(10)
+|> Enum.each(fn {name, pos} ->
+  {:ok, _} =
+    Menu.create_modifier(%{
+      modifier_group_id: pizza_toppings.id,
+      name: name,
+      price_adjustment: 150,
+      position: pos * 10
+    })
+end)
+
+IO.puts("✅ Seeded Sal's Pizza modifier groups (Size, Extra Toppings)")
+
 # ─── Green Dragon Sushi Menu ──────────────────────────────────────────────
 
 {:ok, gd_starters} =
@@ -344,6 +412,30 @@ IO.puts("✅ Seeded Sal's Pizza menu (3 categories, 13 items)")
   })
 
 IO.puts("✅ Seeded Green Dragon Sushi menu (3 categories, 11 items)")
+
+# ─── Green Dragon Modifier Groups ────────────────────────────────────────────
+
+{:ok, spice_level} =
+  Menu.create_modifier_group(%{
+    restaurant_id: green_dragon.id,
+    name: "Spice Level",
+    min_selections: 0,
+    max_selections: 1
+  })
+
+["No Spice", "Mild", "Medium", "Hot", "Extra Hot"]
+|> Enum.with_index(10)
+|> Enum.each(fn {name, pos} ->
+  {:ok, _} =
+    Menu.create_modifier(%{
+      modifier_group_id: spice_level.id,
+      name: name,
+      price_adjustment: 0,
+      position: pos * 10
+    })
+end)
+
+IO.puts("✅ Seeded Green Dragon modifier groups (Spice Level)")
 
 # ─── Demo Orders (associated with Sal's Pizza) ────────────────────────────
 

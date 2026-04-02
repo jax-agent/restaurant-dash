@@ -8,7 +8,7 @@ defmodule RestaurantDash.Menu do
 
   import Ecto.Query, warn: false
   alias RestaurantDash.Repo
-  alias RestaurantDash.Menu.{Category, Item}
+  alias RestaurantDash.Menu.{Category, Item, Modifier, ModifierGroup}
 
   # ─── Categories ─────────────────────────────────────────────────────────────
 
@@ -193,6 +193,157 @@ defmodule RestaurantDash.Menu do
     update_item(item, %{is_available: !item.is_available})
   end
 
+  # ─── Modifier Groups ─────────────────────────────────────────────────────────
+
+  @doc """
+  Returns all modifier groups for a restaurant.
+  """
+  def list_modifier_groups(restaurant_id) do
+    ModifierGroup
+    |> where([g], g.restaurant_id == ^restaurant_id)
+    |> order_by([g], asc: g.inserted_at)
+    |> preload(:modifiers)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single modifier group scoped to a restaurant.
+  """
+  def get_modifier_group(restaurant_id, group_id) do
+    ModifierGroup
+    |> where([g], g.restaurant_id == ^restaurant_id and g.id == ^group_id)
+    |> preload(:modifiers)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets a single modifier group or raises if not found.
+  """
+  def get_modifier_group!(restaurant_id, group_id) do
+    get_modifier_group(restaurant_id, group_id) ||
+      raise Ecto.NoResultsError, queryable: ModifierGroup
+  end
+
+  @doc """
+  Creates a modifier group.
+  """
+  def create_modifier_group(attrs \\ %{}) do
+    %ModifierGroup{}
+    |> ModifierGroup.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a modifier group.
+  """
+  def update_modifier_group(%ModifierGroup{} = group, attrs) do
+    group
+    |> ModifierGroup.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a modifier group.
+  """
+  def delete_modifier_group(%ModifierGroup{} = group) do
+    Repo.delete(group)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking modifier group changes.
+  """
+  def change_modifier_group(%ModifierGroup{} = group, attrs \\ %{}) do
+    ModifierGroup.changeset(group, attrs)
+  end
+
+  # ─── Modifiers ───────────────────────────────────────────────────────────────
+
+  @doc """
+  Returns all active modifiers for a modifier group.
+  """
+  def list_modifiers(group_id) do
+    Modifier
+    |> where([m], m.modifier_group_id == ^group_id)
+    |> order_by([m], asc: m.position, asc: m.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single modifier.
+  """
+  def get_modifier(modifier_id) do
+    Repo.get(Modifier, modifier_id)
+  end
+
+  @doc """
+  Creates a modifier.
+  """
+  def create_modifier(attrs \\ %{}) do
+    %Modifier{}
+    |> Modifier.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a modifier.
+  """
+  def update_modifier(%Modifier{} = modifier, attrs) do
+    modifier
+    |> Modifier.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a modifier.
+  """
+  def delete_modifier(%Modifier{} = modifier) do
+    Repo.delete(modifier)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking modifier changes.
+  """
+  def change_modifier(%Modifier{} = modifier, attrs \\ %{}) do
+    Modifier.changeset(modifier, attrs)
+  end
+
+  # ─── Item–ModifierGroup associations ─────────────────────────────────────────
+
+  @doc """
+  Associates a modifier group with a menu item.
+  """
+  def add_modifier_group_to_item(%Item{} = item, %ModifierGroup{} = group) do
+    item = Repo.preload(item, :modifier_groups)
+
+    item
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_assoc(:modifier_groups, [group | item.modifier_groups])
+    |> Repo.update()
+  end
+
+  @doc """
+  Removes a modifier group from a menu item.
+  """
+  def remove_modifier_group_from_item(%Item{} = item, %ModifierGroup{} = group) do
+    item = Repo.preload(item, :modifier_groups)
+    new_groups = Enum.reject(item.modifier_groups, &(&1.id == group.id))
+
+    item
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_assoc(:modifier_groups, new_groups)
+    |> Repo.update()
+  end
+
+  @doc """
+  Returns a menu item with its modifier groups and modifiers preloaded.
+  """
+  def get_item_with_modifiers(restaurant_id, item_id) do
+    Item
+    |> where([i], i.restaurant_id == ^restaurant_id and i.id == ^item_id)
+    |> preload(modifier_groups: :modifiers)
+    |> Repo.one()
+  end
+
   @doc """
   Returns the full menu for a restaurant: active categories with their items.
   Used for public menu display.
@@ -204,6 +355,7 @@ defmodule RestaurantDash.Menu do
       Item
       |> where([i], i.restaurant_id == ^restaurant_id and i.is_active == true)
       |> order_by([i], asc: i.position, asc: i.inserted_at)
+      |> preload(modifier_groups: :modifiers)
       |> Repo.all()
 
     # Group items by category, preserving category order

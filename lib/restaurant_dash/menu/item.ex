@@ -14,6 +14,11 @@ defmodule RestaurantDash.Menu.Item do
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :category, RestaurantDash.Menu.Category, foreign_key: :menu_category_id
 
+    many_to_many :modifier_groups, RestaurantDash.Menu.ModifierGroup,
+      join_through: "menu_item_modifier_groups",
+      join_keys: [menu_item_id: :id, modifier_group_id: :id],
+      on_replace: :delete
+
     timestamps(type: :utc_datetime)
   end
 
