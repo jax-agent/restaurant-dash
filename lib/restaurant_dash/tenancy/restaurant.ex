@@ -20,6 +20,11 @@ defmodule RestaurantDash.Tenancy.Restaurant do
     field :lat, :float
     field :lng, :float
 
+    # Phase 8: Clover POS integration
+    field :clover_merchant_id, :string
+    field :clover_access_token, :string
+    field :clover_connected_at, :utc_datetime
+
     # Phase 7: Delivery fee settings
     field :fee_mode, :string, default: "flat"
     field :base_delivery_fee, :integer, default: 299

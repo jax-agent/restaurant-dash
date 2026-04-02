@@ -10,6 +10,8 @@ defmodule RestaurantDashWeb.MenuManagementLive do
 
   alias RestaurantDash.{Menu, Tenancy}
   alias RestaurantDash.Menu.{Category, Item}
+  alias RestaurantDash.Integrations.Clover, as: CloverIntegration
+  alias RestaurantDash.Workers.CloverInventorySyncWorker
 
   @impl true
   def mount(_params, _session, socket) do
@@ -29,6 +31,8 @@ defmodule RestaurantDashWeb.MenuManagementLive do
           socket
           |> assign(:current_user, current_user)
           |> assign(:restaurant, restaurant)
+          |> assign(:clover_import_status, nil)
+          |> assign(:clover_sync_status, nil)
           |> assign(:categories, categories)
           |> assign(:selected_category, selected_category)
           |> assign(:items, items)
@@ -315,6 +319,62 @@ defmodule RestaurantDashWeb.MenuManagementLive do
       end
 
     {:noreply, assign(socket, :items, items)}
+  end
+
+  # ─── Clover Events ────────────────────────────────────────────────────────────
+
+  @impl true
+  def handle_event("clover-import-menu", %{"mode" => mode}, socket) do
+    restaurant = socket.assigns.restaurant
+    import_mode = if mode == "overwrite", do: :overwrite, else: :merge
+
+    case CloverIntegration.import_menu(restaurant, mode: import_mode) do
+      {:ok, stats} ->
+        categories = Menu.list_categories(restaurant.id)
+        selected_category = List.first(categories)
+
+        items =
+          if selected_category,
+            do: Menu.list_items_by_category(restaurant.id, selected_category.id),
+            else: []
+
+        msg =
+          "✅ Import complete: #{stats.categories} categories, #{stats.items} items, #{stats.modifier_groups} modifier groups"
+
+        {:noreply,
+         socket
+         |> assign(:categories, categories)
+         |> assign(:selected_category, selected_category)
+         |> assign(:items, items)
+         |> assign(:clover_import_status, {:ok, msg})
+         |> put_flash(:info, msg)}
+
+      {:error, reason} ->
+        {:noreply,
+         socket
+         |> assign(:clover_import_status, {:error, inspect(reason)})
+         |> put_flash(:error, "Clover import failed: #{inspect(reason)}")}
+    end
+  end
+
+  def handle_event("clover-import-menu", params, socket) when not is_map_key(params, "mode") do
+    handle_event("clover-import-menu", Map.put(params, "mode", "merge"), socket)
+  end
+
+  @impl true
+  def handle_event("clover-sync-now", _params, socket) do
+    restaurant = socket.assigns.restaurant
+
+    case CloverInventorySyncWorker.enqueue_for(restaurant.id) do
+      {:ok, _job} ->
+        {:noreply,
+         socket
+         |> assign(:clover_sync_status, :enqueued)
+         |> put_flash(:info, "Inventory sync started. Items will update shortly.")}
+
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, "Sync failed: #{inspect(reason)}")}
+    end
   end
 
   # ─── Render ───────────────────────────────────────────────────────────────────

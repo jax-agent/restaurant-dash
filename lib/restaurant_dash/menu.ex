@@ -193,6 +193,24 @@ defmodule RestaurantDash.Menu do
     update_item(item, %{is_available: !item.is_available})
   end
 
+  @doc """
+  Associates a list of modifier group IDs with a menu item.
+  Replaces any existing associations.
+  """
+  def set_item_modifier_groups(%Item{} = item, modifier_group_ids)
+      when is_list(modifier_group_ids) do
+    groups =
+      ModifierGroup
+      |> where([mg], mg.id in ^modifier_group_ids)
+      |> Repo.all()
+
+    item
+    |> Repo.preload(:modifier_groups)
+    |> Ecto.Changeset.change()
+    |> Ecto.Changeset.put_assoc(:modifier_groups, groups)
+    |> Repo.update()
+  end
+
   # ─── Modifier Groups ─────────────────────────────────────────────────────────
 
   @doc """

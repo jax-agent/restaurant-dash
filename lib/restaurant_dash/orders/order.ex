@@ -52,6 +52,9 @@ defmodule RestaurantDash.Orders.Order do
     field :driver_rating, :integer
     field :driver_rating_comment, :string
 
+    # Phase 8: Clover POS integration
+    field :clover_order_id, :string
+
     belongs_to :restaurant, RestaurantDash.Tenancy.Restaurant
     belongs_to :driver, RestaurantDash.Accounts.User
     has_many :order_items, RestaurantDash.Orders.OrderItem

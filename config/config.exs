@@ -76,13 +76,15 @@ config :phoenix, :json_library, Jason
 # Configure Oban
 config :restaurant_dash, Oban,
   engine: Oban.Engines.Basic,
-  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5],
+  queues: [default: 10, orders: 5, drivers: 5, dispatch: 5, clover: 5],
   repo: RestaurantDash.Repo,
   plugins: [
     {Oban.Plugins.Cron,
      crontab: [
        # Driver simulation every 30 seconds
-       {"*/1 * * * *", RestaurantDash.Workers.DriverSimulationWorker}
+       {"*/1 * * * *", RestaurantDash.Workers.DriverSimulationWorker},
+       # Clover inventory sync every 5 minutes
+       {"*/5 * * * *", RestaurantDash.Workers.CloverInventorySyncWorker}
      ]}
   ]
 
@@ -92,6 +94,12 @@ config :restaurant_dash, :stripe,
   webhook_secret: System.get_env("STRIPE_WEBHOOK_SECRET"),
   # Platform fee percentage (default 5%)
   platform_fee_percent: 5
+
+# Clover POS configuration (mock mode when no key configured)
+config :restaurant_dash, :clover,
+  app_id: System.get_env("CLOVER_APP_ID"),
+  app_secret: System.get_env("CLOVER_APP_SECRET"),
+  env: if(System.get_env("CLOVER_ENV") == "production", do: :production, else: :sandbox)
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

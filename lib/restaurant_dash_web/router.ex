@@ -57,6 +57,12 @@ defmodule RestaurantDashWeb.Router do
     live "/drivers/signup", DriverSignupLive, :new
     live "/dashboard/drivers", DriversDashboardLive, :index
     live "/driver/dashboard", DriverDashboardLive, :index
+
+    # Phase 8: Clover OAuth callback
+    get "/dashboard/settings/clover/callback", CloverOAuthController, :callback
+
+    # Phase 8: Clover inventory webhook
+    post "/api/webhooks/clover", CloverWebhookController, :handle
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

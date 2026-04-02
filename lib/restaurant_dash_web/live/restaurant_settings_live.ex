@@ -7,6 +7,7 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
   on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
 
   alias RestaurantDash.{Tenancy, Payments, Delivery}
+  alias RestaurantDash.Integrations.Clover, as: CloverIntegration
   alias RestaurantDash.Delivery.DeliveryZone
 
   @impl true
@@ -37,6 +38,9 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
 
         zones = Delivery.list_zones(restaurant.id)
 
+        # Handle Clover return
+        clover_just_connected = params["clover_connected"] == "true"
+
         {:ok,
          socket
          |> assign(:current_user, current_user)
@@ -45,6 +49,9 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
          |> assign(:saved, false)
          |> assign(:stripe_connecting, false)
          |> assign(:stripe_just_connected, stripe_just_connected)
+         |> assign(:clover_just_connected, clover_just_connected)
+         |> assign(:clover_connecting, false)
+         |> assign(:clover_merchant_name, nil)
          |> assign(:zones, zones)
          |> assign(:zone_form, nil)
          |> assign(:editing_zone, nil)}
@@ -81,6 +88,31 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
          socket
          |> assign(:stripe_connecting, false)
          |> put_flash(:error, "Stripe connection failed: #{reason}")}
+    end
+  end
+
+  @impl true
+  def handle_event("connect-clover", _params, socket) do
+    base_url = RestaurantDashWeb.Endpoint.url()
+    redirect_uri = base_url <> "/dashboard/settings/clover/callback"
+
+    socket = assign(socket, :clover_connecting, true)
+    url = CloverIntegration.authorization_url(redirect_uri)
+    {:noreply, redirect(socket, external: url)}
+  end
+
+  @impl true
+  def handle_event("disconnect-clover", _params, socket) do
+    case CloverIntegration.disconnect(socket.assigns.restaurant) do
+      {:ok, restaurant} ->
+        {:noreply,
+         socket
+         |> assign(:restaurant, restaurant)
+         |> assign(:clover_just_connected, false)
+         |> put_flash(:info, "Clover disconnected.")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to disconnect Clover.")}
     end
   end
 
@@ -621,6 +653,81 @@ defmodule RestaurantDashWeb.RestaurantSettingsLive do
                   Connecting...
                 <% else %>
                   Connect Stripe Account
+                <% end %>
+              </button>
+            </div>
+          <% end %>
+        </div>
+        <%!-- Clover POS Section --%>
+        <div class="mt-8 bg-white rounded-xl border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-base font-semibold text-gray-800">Clover POS Integration</h2>
+              <p class="text-sm text-gray-500 mt-1">
+                Connect your Clover POS to sync menus, push orders, and reconcile payments
+              </p>
+            </div>
+            <%= if CloverIntegration.mock_mode?() do %>
+              <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-medium">
+                Demo Mode
+              </span>
+            <% end %>
+          </div>
+
+          <%= if CloverIntegration.connected?(@restaurant) do %>
+            <div class="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-sm">
+                ✓
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-green-800">Clover Connected</p>
+                <p class="text-xs text-green-600 font-mono mt-0.5">
+                  Merchant ID: {@restaurant.clover_merchant_id}
+                </p>
+                <%= if @restaurant.clover_connected_at do %>
+                  <p class="text-xs text-green-500 mt-0.5">
+                    Connected {@restaurant.clover_connected_at |> Calendar.strftime("%b %d, %Y")}
+                  </p>
+                <% end %>
+              </div>
+              <button
+                phx-click="disconnect-clover"
+                data-confirm="Disconnect Clover? This will remove your POS integration."
+                class="px-3 py-1.5 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200"
+              >
+                Disconnect
+              </button>
+            </div>
+            <%= if @clover_just_connected do %>
+              <p class="text-sm text-green-600 mt-2">
+                🎉 Clover connected successfully! You can now import your menu and push orders.
+              </p>
+            <% end %>
+          <% else %>
+            <div class="space-y-3">
+              <%= if CloverIntegration.mock_mode?() do %>
+                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p class="text-xs text-yellow-700">
+                    <strong>Demo Mode:</strong>
+                    No Clover API keys configured. Connect will simulate the OAuth flow.
+                    Set <code class="font-mono">CLOVER_APP_ID</code>
+                    and <code class="font-mono">CLOVER_APP_SECRET</code>
+                    to enable real Clover integration.
+                  </p>
+                </div>
+              <% end %>
+              <button
+                phx-click="connect-clover"
+                disabled={@clover_connecting}
+                class={"flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-sm #{if @clover_connecting, do: "opacity-60 cursor-not-allowed"}"}
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                </svg>
+                <%= if @clover_connecting do %>
+                  Connecting to Clover...
+                <% else %>
+                  Connect Clover POS
                 <% end %>
               </button>
             </div>
