@@ -5,6 +5,8 @@ app = 'restaurant-dash'
 primary_region = 'ord'
 
 [build]
+  # Use --remote-only for Fly CI (avoids local Docker Hub hits)
+  # Use local Podman via: DOCKER_HOST=unix:///run/podman/podman.sock flyctl deploy --local-only
 
 [deploy]
   release_command = "/app/bin/migrate"

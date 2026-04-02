@@ -1,11 +1,14 @@
 # Find eligible builder and runner images on Docker Hub.
 # We use separate stages to keep the final image small.
+# Using OTP 28 + bookworm images — these are cached locally in Podman,
+# so local builds (DOCKER_HOST=unix:///run/podman/podman.sock) never hit Docker Hub.
+# Fly remote builds use Fly's own Docker Hub access (unaffected by local 504s).
 ARG ELIXIR_VERSION=1.19.5
-ARG OTP_VERSION=26.2.5.3
-ARG DEBIAN_VERSION=bullseye-20260316-slim
+ARG OTP_VERSION=28.3.1
+ARG DEBIAN_VERSION=bookworm-20260202-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
-ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
+ARG RUNNER_IMAGE="debian:bookworm-slim"
 
 FROM ${BUILDER_IMAGE} as builder
 

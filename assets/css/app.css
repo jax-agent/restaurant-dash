@@ -189,6 +189,8 @@ body {
 .dashboard-layout {
   display: flex;
   min-height: calc(100vh - 60px);
+  position: relative;
+  z-index: 1;
 }
 
 /* ─── Sidebar ─────────────────────────────────────────────────────────────── */
