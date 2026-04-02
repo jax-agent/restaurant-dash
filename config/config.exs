@@ -7,6 +7,19 @@
 # General application configuration
 import Config
 
+config :restaurant_dash, :scopes,
+  user: [
+    default: true,
+    module: RestaurantDash.Accounts.Scope,
+    assign_key: :current_scope,
+    access_path: [:user, :id],
+    schema_key: :user_id,
+    schema_type: :id,
+    schema_table: :users,
+    test_data_fixture: RestaurantDash.AccountsFixtures,
+    test_setup_helper: :register_and_log_in_user
+  ]
+
 config :restaurant_dash,
   ecto_repos: [RestaurantDash.Repo],
   generators: [timestamp_type: :utc_datetime]

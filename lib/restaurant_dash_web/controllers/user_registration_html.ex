@@ -1,0 +1,5 @@
+defmodule RestaurantDashWeb.UserRegistrationHTML do
+  use RestaurantDashWeb, :html
+
+  embed_templates "user_registration_html/*"
+end
