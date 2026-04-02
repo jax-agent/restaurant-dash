@@ -63,6 +63,9 @@ defmodule RestaurantDashWeb.Router do
 
     # Phase 8: Clover inventory webhook
     post "/api/webhooks/clover", CloverWebhookController, :handle
+
+    # Phase 8: Clover reconciliation dashboard
+    live "/dashboard/clover/reconciliation", CloverReconciliationLive, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
