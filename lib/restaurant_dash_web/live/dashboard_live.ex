@@ -1,25 +1,36 @@
 defmodule RestaurantDashWeb.DashboardLive do
   use RestaurantDashWeb, :live_view
 
-  alias RestaurantDash.{Branding, Orders}
+  on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
+
+  alias RestaurantDash.{Branding, Orders, Tenancy}
   alias RestaurantDash.Orders.Order
 
   @statuses Order.valid_statuses()
 
   @impl true
   def mount(_params, _session, socket) do
+    # Resolve the restaurant: owner's restaurant > current_restaurant assign > nil
+    restaurant = resolve_restaurant(socket)
+    restaurant_id = restaurant && restaurant.id
+
     if connected?(socket) do
-      Orders.subscribe()
+      if restaurant_id do
+        Orders.subscribe(restaurant_id)
+      else
+        Orders.subscribe()
+      end
     end
 
-    orders = Orders.list_orders()
+    orders = Orders.list_orders(restaurant_id)
 
     socket =
       socket
-      |> assign(:branding, branding())
+      |> assign(:restaurant, restaurant)
+      |> assign(:branding, branding(restaurant))
       |> assign(:orders, group_by_status(orders))
       |> assign(:statuses, @statuses)
-      |> assign(:status_counts, Orders.count_by_status())
+      |> assign(:status_counts, Orders.count_by_status(restaurant_id))
       |> assign(:active_deliveries, filter_active(orders))
 
     {:ok, socket}
@@ -73,11 +84,12 @@ defmodule RestaurantDashWeb.DashboardLive do
   # ─── Private ───────────────────────────────────────────────────────────────
 
   defp reload_orders(socket) do
-    orders = Orders.list_orders()
+    restaurant_id = socket.assigns[:restaurant] && socket.assigns.restaurant.id
+    orders = Orders.list_orders(restaurant_id)
 
     socket
     |> assign(:orders, group_by_status(orders))
-    |> assign(:status_counts, Orders.count_by_status())
+    |> assign(:status_counts, Orders.count_by_status(restaurant_id))
     |> assign(:active_deliveries, filter_active(orders))
   end
 
@@ -93,12 +105,33 @@ defmodule RestaurantDashWeb.DashboardLive do
     Enum.filter(orders, &(&1.status == "out_for_delivery" && &1.lat && &1.lng))
   end
 
-  defp branding do
+  defp branding(nil) do
     %{
       restaurant_name: Branding.restaurant_name(),
       primary_color: Branding.primary_color(),
       logo_url: Branding.logo_url()
     }
+  end
+
+  defp branding(restaurant) do
+    %{
+      restaurant_name: restaurant.name,
+      primary_color: restaurant.primary_color || Branding.primary_color(),
+      logo_url: restaurant.logo_url || Branding.logo_url()
+    }
+  end
+
+  # Resolve the restaurant for the current session:
+  # 1. From the user's restaurant_id (if owner/staff)
+  # 2. From current_restaurant in socket (set by subdomain plug)
+  # 3. nil otherwise
+  defp resolve_restaurant(socket) do
+    with %{user: user} when not is_nil(user) <- socket.assigns[:current_scope],
+         restaurant_id when not is_nil(restaurant_id) <- user.restaurant_id do
+      Tenancy.get_restaurant(restaurant_id)
+    else
+      _ -> socket.assigns[:current_restaurant]
+    end
   end
 
   defp humanize_status("new"), do: "New"

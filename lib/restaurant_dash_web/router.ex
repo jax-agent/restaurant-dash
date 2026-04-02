@@ -11,6 +11,7 @@ defmodule RestaurantDashWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_scope_for_user
+    plug RestaurantDashWeb.Plugs.ResolveRestaurant
   end
 
   pipeline :api do
@@ -20,7 +21,7 @@ defmodule RestaurantDashWeb.Router do
   scope "/", RestaurantDashWeb do
     pipe_through :browser
 
-    live "/", DashboardLive, :index
+    live "/", LandingLive, :index
     live "/signup", OnboardingLive, :new
 
     # Owner dashboard
