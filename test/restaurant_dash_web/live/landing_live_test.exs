@@ -9,30 +9,29 @@ defmodule RestaurantDashWeb.LandingLiveTest do
     test "renders landing page for unauthenticated visitors", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
 
-      assert html =~ "Deliver Puerto Rico"
-      assert html =~ "Best Food"
-      assert html =~ "Try the Demo"
-      assert html =~ "/signup"
+      assert html =~ "Run your own"
+      assert html =~ "delivery business"
+      assert html =~ "Try Demo"
     end
 
     test "shows login and signup links", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
 
-      assert html =~ "Log in"
-      assert html =~ "signup"
+      assert html =~ "Sign in"
+      assert html =~ "Start free"
     end
 
     test "shows features section", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
 
       assert html =~ "Order Management"
-      assert html =~ "Live Delivery Tracking"
+      assert html =~ "Live Tracking"
     end
 
     test "shows call-to-action", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
 
-      assert html =~ "Create Your Restaurant"
+      assert html =~ "Try Demo"
     end
   end
 
