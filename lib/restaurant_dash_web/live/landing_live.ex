@@ -25,15 +25,13 @@ defmodule RestaurantDashWeb.LandingLive do
     <div class="min-h-screen bg-white">
       <%!-- Hero Section --%>
       <header class="bg-gradient-to-br from-red-500 to-orange-400 text-white">
-        <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <%!-- Order Base logo: coral-red rounded square with O↗ --%>
-            <span style="background:#E63946;border-radius:8px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0;">
-              O↗
-            </span>
-            <span class="text-xl font-bold">Order Base</span>
+            <img src="/images/logo.png" alt="Order Base" class="h-8 w-8 rounded-lg" />
+            <span class="text-lg sm:text-xl font-bold">Order Base</span>
           </div>
-          <nav class="flex items-center gap-4 text-sm">
+          <%!-- Desktop nav --%>
+          <nav class="hidden sm:flex items-center gap-3 text-sm">
             <a href="/users/log-in" class="hover:text-red-100 font-medium">Log in</a>
             <a
               href="/demo"
@@ -48,37 +46,39 @@ defmodule RestaurantDashWeb.LandingLive do
               Get Started
             </a>
           </nav>
+          <%!-- Mobile: just Try Demo button --%>
+          <div class="flex sm:hidden items-center gap-2">
+            <a
+              href="/demo"
+              class="bg-white text-red-500 font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+            >
+              Try Demo
+            </a>
+          </div>
         </div>
 
-        <div class="max-w-4xl mx-auto px-6 py-24 text-center">
-          <h1 class="text-5xl font-bold leading-tight mb-6">
-            Launch Your Own <br />Delivery Platform
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+          <h1 class="text-3xl sm:text-5xl font-bold leading-tight mb-4 sm:mb-6">
+            Deliver Puerto Rico's <br />Best Food
           </h1>
-          <p class="text-xl text-red-100 mb-10 max-w-2xl mx-auto">
-            Order Base gives you everything you need to manage orders, track deliveries,
-            and grow your restaurant — all in one place.
+          <p class="text-base sm:text-xl text-red-100 mb-8 sm:mb-10 max-w-2xl mx-auto">
+            Order Base gives restaurants across the island everything they need to run their own delivery — no middlemen, no commissions.
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
+            <a
+              href="/demo"
+              class="bg-white text-red-500 hover:bg-red-50 font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg"
+            >
+              🎯 Try the Demo
+            </a>
             <a
               href="/signup"
-              class="bg-white text-red-500 hover:bg-red-50 font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg"
+              class="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-4 rounded-xl text-lg transition-colors"
             >
               Start for Free →
             </a>
-            <a
-              href="/demo"
-              class="bg-red-600/80 hover:bg-red-700/80 border-2 border-white/30 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg"
-            >
-              🎯 Try Demo
-            </a>
-            <a
-              href="/users/log-in"
-              class="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-4 rounded-xl text-lg transition-colors"
-            >
-              Log in
-            </a>
           </div>
-          <p class="mt-4 text-red-200 text-sm">No signup required for demo · Full dashboard access</p>
+          <p class="mt-4 text-red-200 text-sm">No signup required · Full dashboard access</p>
         </div>
       </header>
 
@@ -121,22 +121,22 @@ defmodule RestaurantDashWeb.LandingLive do
       </section>
 
       <%!-- CTA Section --%>
-      <section class="py-20 bg-red-500 text-white text-center">
-        <div class="max-w-2xl mx-auto px-6">
-          <h2 class="text-3xl font-bold mb-4">Ready to launch?</h2>
-          <p class="text-red-100 mb-8 text-lg">
+      <section class="py-16 sm:py-20 bg-red-500 text-white text-center">
+        <div class="max-w-2xl mx-auto px-4 sm:px-6">
+          <h2 class="text-2xl sm:text-3xl font-bold mb-4">Ready to launch?</h2>
+          <p class="text-red-100 mb-8 text-base sm:text-lg">
             Set up your restaurant in under 5 minutes. No credit card required.
           </p>
-          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
             <a
               href="/signup"
-              class="bg-white text-red-500 hover:bg-red-50 font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors shadow-lg"
+              class="bg-white text-red-500 hover:bg-red-50 font-bold px-8 py-4 rounded-xl text-lg inline-block transition-colors shadow-lg"
             >
               Create Your Restaurant →
             </a>
             <a
               href="/demo"
-              class="border-2 border-white text-white hover:bg-white/10 font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
+              class="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-4 rounded-xl text-lg inline-block transition-colors"
             >
               🎯 Explore Demo First
             </a>

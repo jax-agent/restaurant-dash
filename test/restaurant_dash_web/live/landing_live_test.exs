@@ -9,9 +9,9 @@ defmodule RestaurantDashWeb.LandingLiveTest do
     test "renders landing page for unauthenticated visitors", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
 
-      assert html =~ "Launch Your Own"
-      assert html =~ "Delivery Platform"
-      assert html =~ "Get Started"
+      assert html =~ "Deliver Puerto Rico"
+      assert html =~ "Best Food"
+      assert html =~ "Try the Demo"
       assert html =~ "/signup"
     end
 
