@@ -27,11 +27,11 @@ defmodule RestaurantDashWeb.LandingLive do
       <header class="bg-gradient-to-br from-red-500 to-orange-400 text-white">
         <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <%!-- OrderBase logo: coral-red rounded square with O↗ --%>
+            <%!-- Order Base logo: coral-red rounded square with O↗ --%>
             <span style="background:#E63946;border-radius:8px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0;">
               O↗
             </span>
-            <span class="text-xl font-bold">OrderBase</span>
+            <span class="text-xl font-bold">Order Base</span>
           </div>
           <nav class="flex items-center gap-4 text-sm">
             <a href="/users/log-in" class="hover:text-red-100 font-medium">Log in</a>
@@ -55,7 +55,7 @@ defmodule RestaurantDashWeb.LandingLive do
             Launch Your Own <br />Delivery Platform
           </h1>
           <p class="text-xl text-red-100 mb-10 max-w-2xl mx-auto">
-            OrderBase gives you everything you need to manage orders, track deliveries,
+            Order Base gives you everything you need to manage orders, track deliveries,
             and grow your restaurant — all in one place.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -145,7 +145,7 @@ defmodule RestaurantDashWeb.LandingLive do
       </section>
 
       <footer class="bg-gray-900 text-gray-400 py-8 text-center text-sm">
-        <p>© 2026 OrderBase. Built for independent restaurants.</p>
+        <p>© 2026 Order Base. Built for independent restaurants.</p>
       </footer>
     </div>
     """

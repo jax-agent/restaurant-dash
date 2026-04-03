@@ -9,7 +9,7 @@ defmodule RestaurantDash.Notifications.Email do
   import Swoosh.Email
   alias RestaurantDash.Mailer
 
-  @from_name "OrderBase"
+  @from_name "Order Base"
   @from_email "notifications@restaurantdash.app"
 
   # ─── Email Builders ───────────────────────────────────────────────────────
@@ -53,7 +53,7 @@ defmodule RestaurantDash.Notifications.Email do
   @doc """
   Welcome email for new customers/drivers/owners.
   """
-  def welcome(email, name, role, restaurant_name \\ "OrderBase") do
+  def welcome(email, name, role, restaurant_name \\ "Order Base") do
     new()
     |> to({name, email})
     |> from({@from_name, @from_email})

@@ -25,7 +25,7 @@ defmodule RestaurantDash.Notifications.Templates do
     "email:delivery_update" => ~S"Update on Your Order #{{order_number}}",
     "email:welcome_customer" => ~S"Welcome to {{restaurant_name}}!",
     "email:welcome_driver" => ~S"Welcome to the {{restaurant_name}} Driver Team!",
-    "email:welcome_owner" => "Your OrderBase account is ready!",
+    "email:welcome_owner" => "Your Order Base account is ready!",
 
     # ─── In-App Templates ───────────────────────────────────────────────────
     "in_app:new_order" => ~S"New order #{{order_number}} received! ({{total}})",
