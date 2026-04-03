@@ -149,12 +149,12 @@ defmodule RestaurantDashWeb.PublicMenuLive do
 
         <%!-- Sticky category nav --%>
         <%= if length(@menu) > 1 do %>
-          <nav class="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm overflow-x-auto">
-            <div class="flex gap-1 px-6 py-2 max-w-4xl mx-auto">
+          <nav class="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+            <div class="menu-category-nav">
               <%= for {cat, _items} <- @menu do %>
                 <a
                   href={"#cat-#{cat.id}"}
-                  class="text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap hover:bg-gray-100 transition-colors"
+                  class="text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
                 >
                   {cat.name}
                 </a>
@@ -186,11 +186,11 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                     <%= for item <- items do %>
                       <a
                         href={"/menu/#{item.id}?restaurant_slug=#{@restaurant.slug}"}
-                        class={"block bg-white rounded-xl border border-gray-200 overflow-hidden flex gap-4 p-4 hover:shadow-md transition-shadow #{unless item.is_available, do: "opacity-70"}"}
+                        class={"menu-item-card #{unless item.is_available, do: "opacity-70"}"}
                         id={"item-#{item.id}"}
                       >
-                        <%!-- Image --%>
-                        <div class="w-20 h-20 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                        <%!-- Image: hidden on mobile if no real image, shown with emoji placeholder on sm+ --%>
+                        <div class={"menu-item-image #{if item.image_url, do: "", else: "hidden sm:flex"}"}>
                           <%= if item.image_url do %>
                             <img
                               src={item.image_url}

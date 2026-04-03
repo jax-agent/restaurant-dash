@@ -65,63 +65,59 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
     ~H"""
     <div class="min-h-screen bg-gray-50">
       <%!-- Header --%>
-      <header class="bg-white border-b border-gray-200 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <header class="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <%!-- Brand --%>
           <div class="flex items-center gap-3">
             <div
-              class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
               style={"background-color: #{@restaurant.primary_color}"}
             >
               {String.first(@restaurant.name)}
             </div>
             <div>
-              <h1 class="text-lg font-bold text-gray-900">{@restaurant.name}</h1>
-              <p class="text-xs text-gray-500">Owner Dashboard</p>
+              <h1 class="text-base font-bold text-gray-900 leading-tight">{@restaurant.name}</h1>
+              <p class="text-xs text-gray-500 hidden sm:block">Owner Dashboard</p>
             </div>
           </div>
 
-          <nav class="flex items-center gap-4 text-sm">
-            <a href="/dashboard/orders" class="text-gray-600 hover:text-gray-900 font-medium">
+          <%!-- Desktop nav (hidden on mobile) --%>
+          <nav class="hidden md:flex items-center gap-4 text-sm">
+            <a href="/dashboard/orders" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Orders
             </a>
-            <a href="/dashboard/menu" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="/dashboard/menu" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Menu
             </a>
             <a
               href="/dashboard/analytics/sales"
-              class="text-gray-600 hover:text-gray-900 font-medium"
+              class="text-gray-600 hover:text-gray-900 font-medium py-1"
             >
               Analytics
             </a>
-            <a
-              href="/dashboard/settings"
-              class="text-gray-600 hover:text-gray-900 font-medium"
-            >
+            <a href="/dashboard/settings" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Settings
             </a>
             <a
               href="/dashboard/notifications"
-              class="text-gray-600 hover:text-gray-900 font-medium"
+              class="text-gray-600 hover:text-gray-900 font-medium py-1"
             >
               Alerts
             </a>
-            <a href="/dashboard/promos" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="/dashboard/promos" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Promos
             </a>
-            <a href="/dashboard/loyalty" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="/dashboard/loyalty" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Loyalty
             </a>
-            <a href="/dashboard/locations" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="/dashboard/locations" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Locations
             </a>
-            <a href="/dashboard/hours" class="text-gray-600 hover:text-gray-900 font-medium">
+            <a href="/dashboard/hours" class="text-gray-600 hover:text-gray-900 font-medium py-1">
               Hours
             </a>
             <%!-- Notification Bell --%>
-            <div
-              class="rounded-full p-1"
-              style={"background-color: #{@restaurant.primary_color}"}
-            >
+            <div class="rounded-full p-1" style={"background-color: #{@restaurant.primary_color}"}>
               <.live_component
                 module={RestaurantDashWeb.NotificationBellLive}
                 id="notification-bell"
@@ -132,10 +128,49 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             <a
               href="/users/log-out"
               data-method="delete"
-              class="text-red-500 hover:text-red-700 font-medium"
+              class="text-red-500 hover:text-red-700 font-medium py-1"
             >
               Log out
             </a>
+          </nav>
+
+          <%!-- Mobile: notification bell + hamburger --%>
+          <div class="flex items-center gap-2 md:hidden">
+            <div class="rounded-full p-1" style={"background-color: #{@restaurant.primary_color}"}>
+              <.live_component
+                module={RestaurantDashWeb.NotificationBellLive}
+                id="notification-bell-mobile"
+                restaurant_id={@restaurant.id}
+                user_id={@current_user.id}
+              />
+            </div>
+            <button
+              phx-click={JS.toggle(to: "#mobile-nav")}
+              class="hamburger-btn"
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+          </div>
+        </div>
+
+        <%!-- Mobile nav drawer (hidden by default) --%>
+        <div id="mobile-nav" class="hidden md:hidden border-t border-gray-100 bg-white">
+          <nav class="px-4 py-3 space-y-1">
+            <a href="/dashboard/orders" class="mobile-nav-link">📋 Orders</a>
+            <a href="/dashboard/menu" class="mobile-nav-link">🍽️ Menu</a>
+            <a href="/dashboard/analytics/sales" class="mobile-nav-link">📈 Analytics</a>
+            <a href="/dashboard/settings" class="mobile-nav-link">⚙️ Settings</a>
+            <a href="/dashboard/notifications" class="mobile-nav-link">🔔 Alerts</a>
+            <a href="/dashboard/promos" class="mobile-nav-link">🎟️ Promos</a>
+            <a href="/dashboard/loyalty" class="mobile-nav-link">⭐ Loyalty</a>
+            <a href="/dashboard/locations" class="mobile-nav-link">📍 Locations</a>
+            <a href="/dashboard/hours" class="mobile-nav-link">🕐 Hours</a>
+            <div class="border-t border-gray-100 pt-2 mt-2">
+              <a href="/users/log-out" data-method="delete" class="mobile-nav-link text-red-500">
+                🚪 Log out
+              </a>
+            </div>
           </nav>
         </div>
       </header>
@@ -144,7 +179,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
         <%!-- Analytics Overview Cards --%>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <%!-- Today's Revenue --%>
-          <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="stat-card stat-card--green">
             <p class="text-sm text-gray-500">Today's Revenue</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">
               {Analytics.format_money(@analytics.today_revenue)}
@@ -155,7 +190,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             </div>
           </div>
           <%!-- Today's Orders --%>
-          <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="stat-card stat-card--blue">
             <p class="text-sm text-gray-500">Today's Orders</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{@analytics.today_orders}</p>
             <div class="mt-2 flex items-center gap-1 text-xs">
@@ -164,7 +199,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             </div>
           </div>
           <%!-- Avg Order Value --%>
-          <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="stat-card stat-card--purple">
             <p class="text-sm text-gray-500">Avg Order Value</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">
               {Analytics.format_money(@analytics.today_avg_order)}
@@ -172,7 +207,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             <p class="text-xs text-gray-400 mt-2">Today</p>
           </div>
           <%!-- Active Orders --%>
-          <div class="bg-white rounded-xl border border-gray-200 p-5">
+          <div class="stat-card stat-card--orange">
             <p class="text-sm text-gray-500">Active Orders</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{@analytics.active_orders}</p>
             <%= if @analytics.avg_delivery_minutes do %>
@@ -187,28 +222,16 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
 
         <%!-- Quick Analytics Links --%>
         <div class="mb-8 flex gap-3 flex-wrap">
-          <a
-            href="/dashboard/analytics/sales"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href="/dashboard/analytics/sales" class="quick-link-pill">
             📈 Sales Report
           </a>
-          <a
-            href="/dashboard/analytics/items"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href="/dashboard/analytics/items" class="quick-link-pill">
             🍕 Popular Items
           </a>
-          <a
-            href="/dashboard/analytics/delivery"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href="/dashboard/analytics/delivery" class="quick-link-pill">
             🚗 Delivery Metrics
           </a>
-          <a
-            href="/dashboard/analytics/customers"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          <a href="/dashboard/analytics/customers" class="quick-link-pill">
             👥 Customer Insights
           </a>
         </div>
@@ -473,9 +496,12 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
   end
 
   defp humanize_status("new"), do: "New"
+  defp humanize_status("scheduled"), do: "Scheduled"
   defp humanize_status("accepted"), do: "Accepted"
   defp humanize_status("preparing"), do: "Preparing"
   defp humanize_status("ready"), do: "Ready"
+  defp humanize_status("assigned"), do: "Assigned"
+  defp humanize_status("picked_up"), do: "Picked Up"
   defp humanize_status("out_for_delivery"), do: "Out for Delivery"
   defp humanize_status("delivered"), do: "Delivered"
   defp humanize_status("cancelled"), do: "Cancelled"
