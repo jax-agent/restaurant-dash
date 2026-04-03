@@ -10,11 +10,11 @@ defmodule RestaurantDash.DemoTest do
       assert user.role == "owner"
     end
 
-    test "creates Sal's Pizza restaurant" do
+    test "creates El Coquí Kitchen restaurant" do
       Demo.setup!()
       restaurant = Tenancy.get_restaurant_by_slug(Demo.demo_slug())
       assert restaurant != nil
-      assert restaurant.name == "Sal's Pizza"
+      assert restaurant.name == "El Coquí Kitchen"
     end
 
     test "seeds menu categories" do

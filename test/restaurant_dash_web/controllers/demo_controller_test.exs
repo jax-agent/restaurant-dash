@@ -30,7 +30,7 @@ defmodule RestaurantDashWeb.DemoControllerTest do
       assert get_session(conn, :demo_mode) == true
     end
 
-    test "creates Sal's Pizza restaurant idempotently", %{conn: conn} do
+    test "creates El Coquí Kitchen restaurant idempotently", %{conn: conn} do
       # First visit
       get(conn, ~p"/demo")
       # Second visit

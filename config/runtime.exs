@@ -22,7 +22,7 @@ end
 
 # White-label configuration
 config :restaurant_dash, :branding,
-  restaurant_name: System.get_env("RESTAURANT_NAME", "Sal's Pizza"),
+  restaurant_name: System.get_env("RESTAURANT_NAME", "El Coquí Kitchen"),
   primary_color: System.get_env("PRIMARY_COLOR", "#E63946"),
   logo_url: System.get_env("LOGO_URL", "🍕")
 

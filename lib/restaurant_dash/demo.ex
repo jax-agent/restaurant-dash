@@ -1,6 +1,6 @@
 defmodule RestaurantDash.Demo do
   @moduledoc """
-  Demo mode for OrderBase. Creates and seeds a demo environment (Sal's Pizza)
+  Demo mode for OrderBase. Creates and seeds a demo environment (El Coquí Kitchen)
   with a demo owner account (demo@orderbase.com). All operations are idempotent.
   """
 
@@ -26,7 +26,7 @@ defmodule RestaurantDash.Demo do
 
   @demo_email "demo@orderbase.com"
   @demo_password "demo-password-orderbase-2026"
-  @demo_slug "sals-pizza"
+  @demo_slug "el-coqui-kitchen"
 
   # ─── Public API ───────────────────────────────────────────────────────────
 
@@ -57,16 +57,16 @@ defmodule RestaurantDash.Demo do
       nil ->
         {:ok, r} =
           Tenancy.create_restaurant(%{
-            name: "Sal's Pizza",
+            name: "El Coquí Kitchen",
             slug: @demo_slug,
-            description: "Authentic New York-style pizza since 1987",
-            phone: "(415) 555-0200",
-            address: "500 Columbus Ave",
-            city: "San Francisco",
-            state: "CA",
-            zip: "94133",
+            description: "Authentic Puerto Rican cuisine — from our kitchen to your door",
+            phone: "(787) 555-0200",
+            address: "123 Calle Fortaleza",
+            city: "Old San Juan",
+            state: "PR",
+            zip: "00901",
             primary_color: "#E63946",
-            timezone: "America/Los_Angeles",
+            timezone: "America/Puerto_Rico",
             is_active: true
           })
 
@@ -127,73 +127,61 @@ defmodule RestaurantDash.Demo do
     {:ok, apps_cat} =
       Menu.create_category(%{
         restaurant_id: restaurant.id,
-        name: "Appetizers",
-        description: "Start your meal right",
+        name: "Aperitivos",
+        description: "Appetizers to start your meal",
         position: 10
       })
 
-    {:ok, pizza_cat} =
+    {:ok, mains_cat} =
       Menu.create_category(%{
         restaurant_id: restaurant.id,
-        name: "Pizzas",
-        description: "Hand-tossed New York-style",
+        name: "Platos Principales",
+        description: "Main dishes",
         position: 20
       })
 
     {:ok, drinks_cat} =
       Menu.create_category(%{
         restaurant_id: restaurant.id,
-        name: "Drinks",
-        description: "Cold beverages",
+        name: "Bebidas",
+        description: "Cold drinks and island favorites",
         position: 30
       })
 
     {:ok, desserts_cat} =
       Menu.create_category(%{
         restaurant_id: restaurant.id,
-        name: "Desserts",
+        name: "Postres",
         description: "Sweet endings",
         position: 40
       })
 
-    # Appetizers
+    # Aperitivos
     Enum.each(
       [
         %{
-          name: "Garlic Bread",
-          description: "Toasted bread with garlic butter",
-          price: 599,
+          name: "Alcapurrias",
+          description: "Fried green banana fritters stuffed with seasoned beef",
+          price: 699,
           position: 10
         },
         %{
-          name: "Mozzarella Sticks",
-          description: "Fried mozzarella with marinara sauce",
-          price: 899,
+          name: "Bacalaítos",
+          description: "Crispy codfish fritters",
+          price: 599,
           position: 20
         },
         %{
-          name: "Buffalo Wings",
-          description: "Crispy wings with your choice of sauce (6 or 12 pc)",
-          price: 1299,
+          name: "Tostones con Ajo",
+          description: "Double-fried plantains with garlic dipping sauce",
+          price: 549,
           position: 30
         },
         %{
-          name: "Caprese Salad",
-          description: "Fresh tomato, mozzarella, basil",
-          price: 999,
+          name: "Sorullitos",
+          description: "Sweet corn fritters with mayo-ketchup",
+          price: 499,
           position: 40
-        },
-        %{
-          name: "Caesar Salad",
-          description: "Classic Caesar with croutons",
-          price: 899,
-          position: 50
-        },
-        %{
-          name: "Breadsticks",
-          description: "Soft breadsticks with marinara",
-          price: 699,
-          position: 60
         }
       ],
       fn attrs ->
@@ -203,104 +191,179 @@ defmodule RestaurantDash.Demo do
       end
     )
 
-    # Pizzas — with size modifier group
-    pizza_items = [
+    # Platos Principales
+    main_items = [
       %{
-        name: "Margherita",
-        description: "San Marzano tomato, fresh mozzarella, basil",
-        price: 1499,
+        name: "Mofongo de Pollo",
+        description: "Garlic mashed plantains with roasted chicken",
+        price: 1699,
         position: 10
       },
       %{
-        name: "Pepperoni",
-        description: "Classic pepperoni with extra cheese",
-        price: 1699,
+        name: "Pernil Asado",
+        description: "Slow-roasted pork shoulder with rice and beans",
+        price: 1899,
         position: 20
       },
       %{
-        name: "BBQ Chicken",
-        description: "Smoky BBQ sauce, grilled chicken, red onion",
-        price: 1799,
+        name: "Arroz con Gandules",
+        description: "Puerto Rican rice with pigeon peas and sofrito",
+        price: 1299,
         position: 30
       },
       %{
-        name: "Veggie Supreme",
-        description: "Roasted peppers, mushrooms, olives, onions",
-        price: 1599,
+        name: "Churrasco a la Criolla",
+        description: "Grilled skirt steak with chimichurri",
+        price: 2299,
         position: 40
       },
       %{
-        name: "Meat Lovers",
-        description: "Pepperoni, sausage, bacon, ham",
-        price: 1999,
+        name: "Pollo Guisado",
+        description: "Stewed chicken in tomato sofrito sauce",
+        price: 1499,
         position: 50
       },
       %{
-        name: "Hawaiian",
-        description: "Ham, pineapple, jalapeños",
-        price: 1699,
+        name: "Pescado Frito",
+        description: "Whole fried red snapper with tostones",
+        price: 1999,
         position: 60
-      },
-      %{
-        name: "Four Cheese",
-        description: "Mozzarella, ricotta, gorgonzola, parmesan",
-        price: 1799,
-        position: 70
-      },
-      %{
-        name: "Spicy Arrabbiata",
-        description: "Spicy tomato sauce, chilis, sausage",
-        price: 1799,
-        position: 80
       }
     ]
 
-    # Create size modifier group for pizzas
-    {:ok, size_group} =
+    # Create Mofongo protein modifier group
+    {:ok, protein_group} =
       Menu.create_modifier_group(%{
         restaurant_id: restaurant.id,
-        name: "Size",
+        name: "Mofongo Protein",
         min_selections: 1,
         max_selections: 1
       })
 
     Enum.each(
       [
-        %{name: "Small (10\")", price_delta: -300, position: 10},
-        %{name: "Medium (12\")", price_delta: 0, position: 20},
-        %{name: "Large (14\")", price_delta: 300, position: 30},
-        %{name: "XL (16\")", price_delta: 600, position: 40}
+        %{name: "Chicken", price_adjustment: 0, position: 10},
+        %{name: "Shrimp", price_adjustment: 400, position: 20},
+        %{name: "Churrasco", price_adjustment: 600, position: 30},
+        %{name: "Vegetable", price_adjustment: 0, position: 40}
       ],
       fn attrs ->
-        Menu.create_modifier(Map.merge(attrs, %{modifier_group_id: size_group.id}))
+        Menu.create_modifier(Map.merge(attrs, %{modifier_group_id: protein_group.id}))
       end
     )
 
-    Enum.each(pizza_items, fn attrs ->
-      {:ok, item} =
-        Menu.create_item(
-          Map.merge(attrs, %{restaurant_id: restaurant.id, menu_category_id: pizza_cat.id})
-        )
+    # Create spice level modifier group
+    {:ok, spice_group} =
+      Menu.create_modifier_group(%{
+        restaurant_id: restaurant.id,
+        name: "Spice Level",
+        min_selections: 0,
+        max_selections: 1
+      })
 
-      Menu.add_modifier_group_to_item(item, size_group)
-    end)
-
-    # Drinks
     Enum.each(
       [
-        %{name: "Coke", description: "Classic Coca-Cola", price: 299, position: 10},
-        %{name: "Diet Coke", description: "Zero sugar", price: 299, position: 20},
-        %{name: "Sprite", description: "Lemon-lime fizz", price: 299, position: 30},
-        %{name: "Root Beer", description: "Classic root beer", price: 299, position: 40},
-        %{name: "Lemonade", description: "Fresh-squeezed lemonade", price: 349, position: 50},
+        %{name: "Mild", price_adjustment: 0, position: 10},
+        %{name: "Medium", price_adjustment: 0, position: 20},
+        %{name: "Picante", price_adjustment: 0, position: 30}
+      ],
+      fn attrs ->
+        Menu.create_modifier(Map.merge(attrs, %{modifier_group_id: spice_group.id}))
+      end
+    )
+
+    # Create rice choice modifier group
+    {:ok, rice_group} =
+      Menu.create_modifier_group(%{
+        restaurant_id: restaurant.id,
+        name: "Rice Choice",
+        min_selections: 0,
+        max_selections: 1
+      })
+
+    Enum.each(
+      [
+        %{name: "White Rice", price_adjustment: 0, position: 10},
+        %{name: "Arroz con Gandules", price_adjustment: 0, position: 20},
+        %{name: "Yellow Rice", price_adjustment: 100, position: 30}
+      ],
+      fn attrs ->
+        Menu.create_modifier(Map.merge(attrs, %{modifier_group_id: rice_group.id}))
+      end
+    )
+
+    # Create add sides modifier group
+    {:ok, sides_group} =
+      Menu.create_modifier_group(%{
+        restaurant_id: restaurant.id,
+        name: "Add Sides",
+        min_selections: 0,
+        max_selections: nil
+      })
+
+    Enum.each(
+      [
+        %{name: "Maduros", price_adjustment: 300, position: 10},
+        %{name: "Tostones", price_adjustment: 300, position: 20},
+        %{name: "Habichuelas", price_adjustment: 250, position: 30}
+      ],
+      fn attrs ->
+        Menu.create_modifier(Map.merge(attrs, %{modifier_group_id: sides_group.id}))
+      end
+    )
+
+    Enum.each(main_items, fn attrs ->
+      {:ok, item} =
+        Menu.create_item(
+          Map.merge(attrs, %{restaurant_id: restaurant.id, menu_category_id: mains_cat.id})
+        )
+
+      # Add protein group only to Mofongo
+      if item.name == "Mofongo de Pollo" do
+        Menu.add_modifier_group_to_item(item, protein_group)
+      end
+
+      # Add spice and rice to all mains except Arroz con Gandules
+      if item.name not in ["Arroz con Gandules"] do
+        Menu.add_modifier_group_to_item(item, spice_group)
+      end
+
+      Menu.add_modifier_group_to_item(item, sides_group)
+    end)
+
+    # Bebidas
+    Enum.each(
+      [
         %{
-          name: "San Pellegrino",
-          description: "Italian sparkling water",
-          price: 349,
-          position: 60
+          name: "Piña Colada (virgin)",
+          description: "Classic Puerto Rican coconut-pineapple smoothie",
+          price: 599,
+          position: 10
         },
-        %{name: "Sparkling Water", description: "Sparkling water", price: 249, position: 70},
-        %{name: "Iced Tea", description: "Freshly brewed", price: 249, position: 80}
+        %{
+          name: "Malta India",
+          description: "Traditional Puerto Rican malt beverage",
+          price: 299,
+          position: 20
+        },
+        %{
+          name: "Café con Leche",
+          description: "Puerto Rican style coffee with steamed milk",
+          price: 399,
+          position: 30
+        },
+        %{
+          name: "Jugo de Parcha",
+          description: "Fresh passion fruit juice",
+          price: 449,
+          position: 40
+        },
+        %{
+          name: "Coquito",
+          description: "Coconut eggnog (seasonal)",
+          price: 699,
+          position: 50
+        }
       ],
       fn attrs ->
         Menu.create_item(
@@ -309,18 +372,33 @@ defmodule RestaurantDash.Demo do
       end
     )
 
-    # Desserts
+    # Postres
     Enum.each(
       [
-        %{name: "Tiramisu", description: "Classic Italian tiramisu", price: 799, position: 10},
-        %{name: "Cannoli", description: "Sicilian cannoli (2pc)", price: 699, position: 20},
         %{
-          name: "Chocolate Lava Cake",
-          description: "Warm chocolate cake with ice cream",
-          price: 899,
+          name: "Tembleque",
+          description: "Coconut pudding with cinnamon",
+          price: 699,
+          position: 10
+        },
+        %{
+          name: "Flan de Queso",
+          description: "Cream cheese flan",
+          price: 799,
+          position: 20
+        },
+        %{
+          name: "Arroz con Dulce",
+          description: "Sweet rice pudding with coconut milk",
+          price: 599,
           position: 30
         },
-        %{name: "Gelato", description: "Italian gelato (3 scoops)", price: 599, position: 40}
+        %{
+          name: "Quesitos",
+          description: "Cream cheese puff pastry",
+          price: 399,
+          position: 40
+        }
       ],
       fn attrs ->
         Menu.create_item(
@@ -341,14 +419,14 @@ defmodule RestaurantDash.Demo do
     {:ok, loc1} =
       Locations.create_location(%{
         restaurant_id: restaurant.id,
-        name: "North Beach (Main)",
-        address: "500 Columbus Ave",
-        city: "San Francisco",
-        state: "CA",
-        zip: "94133",
-        phone: "(415) 555-0200",
-        lat: 37.8002,
-        lng: -122.4090,
+        name: "Old San Juan (Main)",
+        address: "123 Calle Fortaleza",
+        city: "Old San Juan",
+        state: "PR",
+        zip: "00901",
+        phone: "(787) 555-0200",
+        lat: 18.4655,
+        lng: -66.1057,
         is_active: true,
         is_primary: true
       })
@@ -357,14 +435,28 @@ defmodule RestaurantDash.Demo do
 
     Locations.create_location(%{
       restaurant_id: restaurant.id,
-      name: "Mission District",
-      address: "2400 Mission St",
-      city: "San Francisco",
-      state: "CA",
-      zip: "94110",
-      phone: "(415) 555-0210",
-      lat: 37.7570,
-      lng: -122.4194,
+      name: "Santurce",
+      address: "456 Ave Ponce de León",
+      city: "Santurce",
+      state: "PR",
+      zip: "00907",
+      phone: "(787) 555-0210",
+      lat: 18.4488,
+      lng: -66.0614,
+      is_active: true,
+      is_primary: false
+    })
+
+    Locations.create_location(%{
+      restaurant_id: restaurant.id,
+      name: "Ponce",
+      address: "789 Calle Comercio",
+      city: "Ponce",
+      state: "PR",
+      zip: "00731",
+      phone: "(787) 555-0220",
+      lat: 18.0115,
+      lng: -66.6141,
       is_active: true,
       is_primary: false
     })
@@ -393,7 +485,6 @@ defmodule RestaurantDash.Demo do
   # ─── Drivers ──────────────────────────────────────────────────────────────
 
   defp seed_drivers(restaurant) do
-    # Check if any driver users exist for this restaurant
     existing =
       Repo.all(
         from u in User,
@@ -407,45 +498,44 @@ defmodule RestaurantDash.Demo do
   defp do_seed_drivers(restaurant) do
     drivers = [
       %{
-        name: "Marco Rivera",
-        email: "marco.driver@demo.orderbase.com",
+        name: "Diego Morales",
+        email: "diego.driver@demo.orderbase.com",
         vehicle_type: "car",
-        license_plate: "7ABC123",
+        license_plate: "HJK-123",
         status: "available",
-        lat: 37.7983,
-        lng: -122.4065
+        lat: 18.4655,
+        lng: -66.1057
       },
       %{
-        name: "Jasmine Park",
-        email: "jasmine.driver@demo.orderbase.com",
+        name: "Sofia Hernández",
+        email: "sofia.driver@demo.orderbase.com",
         vehicle_type: "car",
-        license_plate: "5DEF456",
+        license_plate: "MNP-456",
         status: "on_delivery",
-        lat: 37.7751,
-        lng: -122.4193
+        lat: 18.4488,
+        lng: -66.0614
       },
       %{
-        name: "Darius Cohen",
-        email: "darius.driver@demo.orderbase.com",
+        name: "Andrés Cruz",
+        email: "andres.driver@demo.orderbase.com",
         vehicle_type: "scooter",
-        license_plate: "3GHI789",
+        license_plate: "QRS-789",
         status: "available",
-        lat: 37.7855,
-        lng: -122.4310
+        lat: 18.4600,
+        lng: -66.1100
       },
       %{
-        name: "Amara Osei",
-        email: "amara.driver@demo.orderbase.com",
+        name: "Elena Ramos",
+        email: "elena.driver@demo.orderbase.com",
         vehicle_type: "bike",
-        license_plate: "1JKL012",
+        license_plate: "TUV-012",
         status: "offline",
-        lat: 37.7740,
-        lng: -122.4380
+        lat: 18.4550,
+        lng: -66.0900
       }
     ]
 
     Enum.each(drivers, fn attrs ->
-      # Create user account for this driver
       user =
         case Accounts.get_user_by_email(attrs.email) do
           %User{} = u ->
@@ -464,7 +554,6 @@ defmodule RestaurantDash.Demo do
             u
         end
 
-      # Create driver profile if not exists
       case Repo.get_by(DriverProfile, user_id: user.id) do
         %DriverProfile{} ->
           :ok
@@ -503,112 +592,136 @@ defmodule RestaurantDash.Demo do
 
     orders = [
       %{
-        customer_name: "Marcus Chen",
-        phone: "(415) 555-0101",
-        items: ["Margherita (Large)", "Garlic Bread", "Tiramisu", "San Pellegrino"],
+        customer_name: "María Santos",
+        phone: "(787) 555-0101",
+        items: ["Mofongo de Pollo", "Tostones con Ajo", "Piña Colada (virgin)"],
         status: "new",
-        delivery_address: "742 Market St, San Francisco, CA 94103",
-        lat: 37.7897,
-        lng: -122.4001,
-        total_amount: 3897,
+        delivery_address: "742 Calle San Francisco, Old San Juan, PR 00901",
+        lat: 18.4660,
+        lng: -66.1075,
+        total_amount: 3097,
         inserted_at: DateTime.add(now, -5, :minute)
       },
       %{
-        customer_name: "Priya Patel",
-        phone: "(415) 555-0102",
-        items: ["Pepperoni (Medium)", "Caesar Salad", "Diet Coke x2"],
+        customer_name: "José Rivera",
+        phone: "(787) 555-0102",
+        items: ["Pernil Asado", "Alcapurrias", "Malta India x2"],
         status: "preparing",
-        delivery_address: "1600 Fillmore St, San Francisco, CA 94115",
-        lat: 37.7843,
-        lng: -122.4329,
-        total_amount: 2997,
+        delivery_address: "456 Ave Ponce de León, Santurce, PR 00907",
+        lat: 18.4488,
+        lng: -66.0614,
+        total_amount: 3295,
         inserted_at: DateTime.add(now, -18, :minute)
       },
       %{
-        customer_name: "Jordan Williams",
-        phone: "(415) 555-0103",
-        items: ["BBQ Chicken (Large)", "Buffalo Wings", "Lemonade"],
+        customer_name: "Carmen López",
+        phone: "(787) 555-0103",
+        items: ["Churrasco a la Criolla", "Bacalaítos", "Café con Leche"],
         status: "out_for_delivery",
-        delivery_address: "555 California St, San Francisco, CA 94104",
-        lat: 37.7929,
-        lng: -122.4034,
-        total_amount: 4197,
+        delivery_address: "100 Calle Luna, Old San Juan, PR 00901",
+        lat: 18.4640,
+        lng: -66.1090,
+        total_amount: 3497,
         inserted_at: DateTime.add(now, -35, :minute)
       },
       %{
-        customer_name: "Sofia Rosario",
-        phone: "(415) 555-0104",
-        items: ["Veggie Supreme (Small)", "Caesar Salad"],
+        customer_name: "Luis Rodríguez",
+        phone: "(787) 555-0104",
+        items: ["Arroz con Gandules", "Sorullitos"],
         status: "delivered",
-        delivery_address: "2200 Judah St, San Francisco, CA 94122",
-        lat: 37.7612,
-        lng: -122.4871,
-        total_amount: 2298,
+        delivery_address: "789 Calle Comercio, Ponce, PR 00731",
+        lat: 18.0115,
+        lng: -66.6141,
+        total_amount: 1798,
         inserted_at: DateTime.add(now, -2, :hour)
       },
       %{
-        customer_name: "Tyler Nguyen",
-        phone: "(415) 555-0105",
-        items: ["Meat Lovers (XL)", "Breadsticks", "Root Beer x3"],
+        customer_name: "Ana García",
+        phone: "(787) 555-0105",
+        items: ["Pescado Frito", "Tostones con Ajo", "Jugo de Parcha"],
         status: "preparing",
-        delivery_address: "88 Divisadero St, San Francisco, CA 94117",
-        lat: 37.7732,
-        lng: -122.4376,
-        total_amount: 3296,
+        delivery_address: "222 Ave Fernández Juncos, San Juan, PR 00901",
+        lat: 18.4530,
+        lng: -66.0800,
+        total_amount: 3097,
         inserted_at: DateTime.add(now, -22, :minute)
       },
       %{
-        customer_name: "Amara Johnson",
-        phone: "(415) 555-0106",
-        items: ["Hawaiian (Large)", "Mozzarella Sticks", "Sprite"],
+        customer_name: "Pedro Díaz",
+        phone: "(787) 555-0106",
+        items: ["Pollo Guisado", "Alcapurrias", "Coquito"],
         status: "new",
-        delivery_address: "1400 Valencia St, San Francisco, CA 94110",
-        lat: 37.7635,
-        lng: -122.4198,
-        total_amount: 2898,
+        delivery_address: "55 Calle Recinto Sur, Old San Juan, PR 00901",
+        lat: 18.4620,
+        lng: -66.1030,
+        total_amount: 2897,
         inserted_at: DateTime.add(now, -2, :minute)
       },
       %{
-        customer_name: "Devon Kim",
-        phone: "(415) 555-0107",
-        items: ["Four Cheese (Medium)", "Caprese Salad", "Sparkling Water"],
+        customer_name: "Rosa Martínez",
+        phone: "(787) 555-0107",
+        items: ["Mofongo de Pollo", "Tembleque", "Malta India"],
         status: "out_for_delivery",
-        delivery_address: "450 Hayes St, San Francisco, CA 94102",
-        lat: 37.7762,
-        lng: -122.4232,
-        total_amount: 3047,
+        delivery_address: "340 Calle Canals, Santurce, PR 00907",
+        lat: 18.4500,
+        lng: -66.0650,
+        total_amount: 3297,
         inserted_at: DateTime.add(now, -40, :minute)
       },
       %{
-        customer_name: "Isabella Torres",
-        phone: "(415) 555-0108",
-        items: ["Spicy Arrabbiata (Large)", "Cannoli x2"],
+        customer_name: "Carlos Colón",
+        phone: "(787) 555-0108",
+        items: ["Pernil Asado", "Flan de Queso"],
         status: "delivered",
-        delivery_address: "3200 16th St, San Francisco, CA 94103",
-        lat: 37.7651,
-        lng: -122.4294,
-        total_amount: 3197,
+        delivery_address: "18 Calle Mayor, Ponce, PR 00730",
+        lat: 18.0125,
+        lng: -66.6120,
+        total_amount: 2698,
         inserted_at: DateTime.add(now, -90, :minute)
       }
     ]
 
-    # Add historical orders for analytics (last 30 days)
+    # Historical orders for analytics (last 30 days)
+    pr_customers = [
+      "Isabel Torres",
+      "Miguel Vega",
+      "María Santos",
+      "José Rivera",
+      "Carmen López",
+      "Luis Rodríguez",
+      "Ana García",
+      "Pedro Díaz",
+      "Rosa Martínez",
+      "Carlos Colón"
+    ]
+
+    pr_items = [
+      "Mofongo de Pollo",
+      "Pernil Asado",
+      "Arroz con Gandules",
+      "Pollo Guisado",
+      "Pescado Frito",
+      "Alcapurrias",
+      "Malta India"
+    ]
+
     historical =
       Enum.flat_map(1..30, fn days_ago ->
         count = Enum.random(3..8)
 
         Enum.map(1..count, fn i ->
           minutes_offset = Enum.random(0..1380)
+          customer = Enum.at(pr_customers, rem(days_ago * i, length(pr_customers)))
 
           %{
-            customer_name: "Customer #{days_ago}-#{i}",
+            customer_name: customer,
             phone:
-              "(415) 555-#{String.pad_leading(Integer.to_string(days_ago * 10 + i), 4, "0")}",
-            items: ["Margherita (Medium)", "Coke"],
+              "(787) 555-#{String.pad_leading(Integer.to_string(days_ago * 10 + i), 4, "0")}",
+            items: [Enum.at(pr_items, rem(i, length(pr_items))), "Malta India"],
             status: "delivered",
-            delivery_address: "#{Enum.random(100..999)} Main St, San Francisco, CA 94103",
-            lat: 37.77 + :rand.uniform() * 0.05,
-            lng: -122.41 + :rand.uniform() * 0.05,
+            delivery_address: "#{Enum.random(100..999)} Calle San Francisco, San Juan, PR 00901",
+            lat: 18.4655 + :rand.uniform() * 0.05,
+            lng: -66.1057 + :rand.uniform() * 0.05,
             total_amount: Enum.random(1500..4500),
             inserted_at: DateTime.add(now, -(days_ago * 24 * 60 + minutes_offset), :minute)
           }
@@ -620,7 +733,6 @@ defmodule RestaurantDash.Demo do
 
       case Orders.create_order(Map.put(attrs, :restaurant_id, restaurant.id)) do
         {:ok, order} ->
-          # Backdate the order for analytics
           Repo.update_all(
             from(o in Order, where: o.id == ^order.id),
             set: [inserted_at: inserted_at]
@@ -654,7 +766,7 @@ defmodule RestaurantDash.Demo do
           is_active: true
         },
         %{
-          code: "PIZZA20",
+          code: "ISLAND20",
           discount_type: "percentage",
           discount_value: 20,
           max_uses: 200,
@@ -673,21 +785,25 @@ defmodule RestaurantDash.Demo do
   # ─── Loyalty ──────────────────────────────────────────────────────────────
 
   defp seed_loyalty(restaurant) do
-    existing_accounts =
-      Repo.aggregate(
-        from(la in LoyaltyAccount, where: la.restaurant_id == ^restaurant.id),
-        :count
-      )
-
     existing_rewards =
       Repo.aggregate(from(lr in LoyaltyReward, where: lr.restaurant_id == ^restaurant.id), :count)
 
     if existing_rewards == 0 do
       Enum.each(
         [
-          %{name: "Free Garlic Bread", points_cost: 100, discount_value: 599, is_active: true},
+          %{
+            name: "Free Tostones",
+            points_cost: 100,
+            discount_value: 549,
+            is_active: true
+          },
           %{name: "$5 Off Your Order", points_cost: 250, discount_value: 500, is_active: true},
-          %{name: "Free Large Pizza", points_cost: 500, discount_value: 1799, is_active: true}
+          %{
+            name: "Free Mofongo de Pollo",
+            points_cost: 500,
+            discount_value: 1699,
+            is_active: true
+          }
         ],
         fn attrs ->
           Loyalty.create_reward(Map.put(attrs, :restaurant_id, restaurant.id))
@@ -695,13 +811,19 @@ defmodule RestaurantDash.Demo do
       )
     end
 
+    existing_accounts =
+      Repo.aggregate(
+        from(la in LoyaltyAccount, where: la.restaurant_id == ^restaurant.id),
+        :count
+      )
+
     if existing_accounts < 5 do
       customers = [
-        %{email: "marcus.chen@example.com", points: 340},
-        %{email: "priya.patel@example.com", points: 175},
-        %{email: "sofia.rosario@example.com", points: 520},
-        %{email: "tyler.nguyen@example.com", points: 90},
-        %{email: "amara.johnson@example.com", points: 210}
+        %{email: "maria.santos@example.com", points: 340},
+        %{email: "jose.rivera@example.com", points: 175},
+        %{email: "carmen.lopez@example.com", points: 520},
+        %{email: "luis.rodriguez@example.com", points: 90},
+        %{email: "ana.garcia@example.com", points: 210}
       ]
 
       Enum.each(customers, fn %{email: email, points: points} ->

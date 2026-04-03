@@ -4,7 +4,7 @@ defmodule RestaurantDash.Branding do
   """
 
   def restaurant_name do
-    get(:restaurant_name, "Sal's Pizza")
+    get(:restaurant_name, "El Coquí Kitchen")
   end
 
   def primary_color do
@@ -12,7 +12,7 @@ defmodule RestaurantDash.Branding do
   end
 
   def logo_url do
-    get(:logo_url, "🍕")
+    get(:logo_url, "/images/logo.png")
   end
 
   defp get(key, default) do

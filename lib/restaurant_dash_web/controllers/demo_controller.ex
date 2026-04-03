@@ -10,7 +10,7 @@ defmodule RestaurantDashWeb.DemoController do
   @doc """
   GET /demo
 
-  Idempotently seeds Sal's Pizza demo data, creates/finds demo@orderbase.com,
+  Idempotently seeds El Coquí Kitchen demo data, creates/finds demo@orderbase.com,
   creates a session token, and redirects to /dashboard.
   """
   def index(conn, _params) do

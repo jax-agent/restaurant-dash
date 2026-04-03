@@ -130,7 +130,7 @@ defmodule RestaurantDashWeb.OnboardingLive do
                 type="text"
                 name="restaurant[name]"
                 value={@restaurant_form[:name].value}
-                placeholder="Sal's Pizza"
+                placeholder="El Coquí Kitchen"
                 class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                 required
               />

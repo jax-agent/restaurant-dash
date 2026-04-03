@@ -9,7 +9,12 @@
 <header class="dashboard-header" style="background-color: var(--primary);">
   <div class="header-inner">
     <div class="header-brand">
-      <span class="header-logo">{@branding.logo_url}</span>
+      <img
+        src={@branding.logo_url}
+        alt="Logo"
+        style="height:36px;width:auto;"
+        class="header-logo-img"
+      />
       <span class="header-name" id="restaurant-name">{@branding.restaurant_name}</span>
     </div>
     <a href="/orders/new" class="btn-new-order" style="text-decoration:none;">+ New Order</a>

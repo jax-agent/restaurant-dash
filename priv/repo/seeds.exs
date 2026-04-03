@@ -14,18 +14,18 @@ Repo.delete_all(Restaurant)
 
 # ─── Demo Restaurants ─────────────────────────────────────────────────────
 
-{:ok, sals} =
+{:ok, coqui} =
   Tenancy.create_restaurant(%{
-    name: "Sal's Pizza",
-    slug: "sals-pizza",
-    description: "Authentic New York-style pizza since 1987",
-    phone: "(415) 555-0200",
-    address: "500 Columbus Ave",
-    city: "San Francisco",
-    state: "CA",
-    zip: "94133",
+    name: "El Coquí Kitchen",
+    slug: "el-coqui-kitchen",
+    description: "Authentic Puerto Rican cuisine — from our kitchen to your door",
+    phone: "(787) 555-0200",
+    address: "123 Calle Fortaleza",
+    city: "Old San Juan",
+    state: "PR",
+    zip: "00901",
     primary_color: "#E63946",
-    timezone: "America/Los_Angeles",
+    timezone: "America/Puerto_Rico",
     is_active: true
   })
 
@@ -46,232 +46,331 @@ Repo.delete_all(Restaurant)
 
 IO.puts("✅ Seeded 2 demo restaurants")
 
-# ─── Sal's Pizza Menu ─────────────────────────────────────────────────────
+# ─── El Coquí Kitchen Menu ─────────────────────────────────────────────────────
 
-{:ok, sals_apps} =
+{:ok, aperitivos} =
   Menu.create_category(%{
-    restaurant_id: sals.id,
-    name: "Appetizers",
-    description: "Start your meal right",
+    restaurant_id: coqui.id,
+    name: "Aperitivos",
+    description: "Appetizers to start your meal",
     position: 10
   })
 
-{:ok, sals_pizzas} =
+{:ok, platos} =
   Menu.create_category(%{
-    restaurant_id: sals.id,
-    name: "Pizzas",
-    description: "Hand-tossed New York-style",
+    restaurant_id: coqui.id,
+    name: "Platos Principales",
+    description: "Main dishes",
     position: 20
   })
 
-{:ok, sals_drinks} =
+{:ok, bebidas} =
   Menu.create_category(%{
-    restaurant_id: sals.id,
-    name: "Drinks",
-    description: "Cold beverages",
+    restaurant_id: coqui.id,
+    name: "Bebidas",
+    description: "Cold drinks and island favorites",
     position: 30
   })
 
-# Appetizers
+{:ok, postres} =
+  Menu.create_category(%{
+    restaurant_id: coqui.id,
+    name: "Postres",
+    description: "Sweet endings",
+    position: 40
+  })
+
+# Aperitivos
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_apps.id,
-    name: "Garlic Bread",
-    description: "Toasted bread with garlic butter",
-    price: 599,
+    restaurant_id: coqui.id,
+    menu_category_id: aperitivos.id,
+    name: "Alcapurrias",
+    description: "Fried green banana fritters stuffed with seasoned beef",
+    price: 699,
     position: 10
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_apps.id,
-    name: "Mozzarella Sticks",
-    description: "Fried mozzarella with marinara sauce",
-    price: 899,
+    restaurant_id: coqui.id,
+    menu_category_id: aperitivos.id,
+    name: "Bacalaítos",
+    description: "Crispy codfish fritters",
+    price: 599,
     position: 20
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_apps.id,
-    name: "Buffalo Wings",
-    description: "Crispy wings with your choice of sauce",
+    restaurant_id: coqui.id,
+    menu_category_id: aperitivos.id,
+    name: "Tostones con Ajo",
+    description: "Double-fried plantains with garlic dipping sauce",
+    price: 549,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: aperitivos.id,
+    name: "Sorullitos",
+    description: "Sweet corn fritters with mayo-ketchup",
+    price: 499,
+    position: 40
+  })
+
+# Platos Principales
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Mofongo de Pollo",
+    description: "Garlic mashed plantains with roasted chicken",
+    price: 1699,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Pernil Asado",
+    description: "Slow-roasted pork shoulder with rice and beans",
+    price: 1899,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Arroz con Gandules",
+    description: "Puerto Rican rice with pigeon peas and sofrito",
     price: 1299,
     position: 30
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_apps.id,
-    name: "Caesar Salad",
-    description: "Romaine lettuce, croutons, parmesan",
-    price: 999,
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Churrasco a la Criolla",
+    description: "Grilled skirt steak with chimichurri",
+    price: 2299,
     position: 40
   })
 
-# Pizzas
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_pizzas.id,
-    name: "Margherita",
-    description: "San Marzano tomato, fresh mozzarella, basil",
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Pollo Guisado",
+    description: "Stewed chicken in tomato sofrito sauce",
     price: 1499,
-    position: 10
-  })
-
-{:ok, _} =
-  Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_pizzas.id,
-    name: "Pepperoni",
-    description: "Loaded with classic pepperoni",
-    price: 1699,
-    position: 20
-  })
-
-{:ok, _} =
-  Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_pizzas.id,
-    name: "BBQ Chicken",
-    description: "Tangy BBQ sauce, grilled chicken, red onion",
-    price: 1899,
-    position: 30
-  })
-
-{:ok, _} =
-  Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_pizzas.id,
-    name: "Veggie Supreme",
-    description: "Bell peppers, mushrooms, olives, onions",
-    price: 1699,
-    position: 40
-  })
-
-{:ok, _} =
-  Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_pizzas.id,
-    name: "Meat Lovers",
-    description: "Pepperoni, sausage, ham, bacon",
-    price: 1999,
     position: 50
   })
 
-# Drinks
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_drinks.id,
-    name: "Coke",
-    description: "Classic Coca-Cola",
-    price: 299,
+    restaurant_id: coqui.id,
+    menu_category_id: platos.id,
+    name: "Pescado Frito",
+    description: "Whole fried red snapper with tostones",
+    price: 1999,
+    position: 60
+  })
+
+# Bebidas
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: bebidas.id,
+    name: "Piña Colada (virgin)",
+    description: "Classic Puerto Rican coconut-pineapple smoothie",
+    price: 599,
     position: 10
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_drinks.id,
-    name: "Diet Coke",
-    description: "Coca-Cola Zero Sugar",
+    restaurant_id: coqui.id,
+    menu_category_id: bebidas.id,
+    name: "Malta India",
+    description: "Traditional Puerto Rican malt beverage",
     price: 299,
     position: 20
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_drinks.id,
-    name: "San Pellegrino",
-    description: "Italian sparkling mineral water",
+    restaurant_id: coqui.id,
+    menu_category_id: bebidas.id,
+    name: "Café con Leche",
+    description: "Puerto Rican style coffee with steamed milk",
     price: 399,
     position: 30
   })
 
 {:ok, _} =
   Menu.create_item(%{
-    restaurant_id: sals.id,
-    menu_category_id: sals_drinks.id,
-    name: "Lemonade",
-    description: "Fresh-squeezed house lemonade",
+    restaurant_id: coqui.id,
+    menu_category_id: bebidas.id,
+    name: "Jugo de Parcha",
+    description: "Fresh passion fruit juice",
+    price: 449,
+    position: 40
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: bebidas.id,
+    name: "Coquito",
+    description: "Coconut eggnog (seasonal)",
+    price: 699,
+    position: 50
+  })
+
+# Postres
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: postres.id,
+    name: "Tembleque",
+    description: "Coconut pudding with cinnamon",
+    price: 699,
+    position: 10
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: postres.id,
+    name: "Flan de Queso",
+    description: "Cream cheese flan",
+    price: 799,
+    position: 20
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: postres.id,
+    name: "Arroz con Dulce",
+    description: "Sweet rice pudding with coconut milk",
+    price: 599,
+    position: 30
+  })
+
+{:ok, _} =
+  Menu.create_item(%{
+    restaurant_id: coqui.id,
+    menu_category_id: postres.id,
+    name: "Quesitos",
+    description: "Cream cheese puff pastry",
     price: 399,
     position: 40
   })
 
-IO.puts("✅ Seeded Sal's Pizza menu (3 categories, 13 items)")
+IO.puts("✅ Seeded El Coquí Kitchen menu (4 categories, 20 items)")
 
-# ─── Sal's Pizza Modifier Groups ─────────────────────────────────────────────
+# ─── El Coquí Kitchen Modifier Groups ─────────────────────────────────────────
 
-{:ok, pizza_sizes} =
+{:ok, protein_group} =
   Menu.create_modifier_group(%{
-    restaurant_id: sals.id,
-    name: "Size",
+    restaurant_id: coqui.id,
+    name: "Mofongo Protein",
     min_selections: 1,
     max_selections: 1
   })
 
-{:ok, _} =
-  Menu.create_modifier(%{
-    modifier_group_id: pizza_sizes.id,
-    name: "Small (10\")",
-    price_adjustment: 0,
-    position: 10
-  })
-
-{:ok, _} =
-  Menu.create_modifier(%{
-    modifier_group_id: pizza_sizes.id,
-    name: "Medium (14\")",
-    price_adjustment: 300,
-    position: 20
-  })
-
-{:ok, _} =
-  Menu.create_modifier(%{
-    modifier_group_id: pizza_sizes.id,
-    name: "Large (18\")",
-    price_adjustment: 600,
-    position: 30
-  })
-
-{:ok, pizza_toppings} =
-  Menu.create_modifier_group(%{
-    restaurant_id: sals.id,
-    name: "Extra Toppings",
-    min_selections: 0,
-    max_selections: nil
-  })
-
-toppings = [
-  "Pepperoni",
-  "Mushrooms",
-  "Bell Peppers",
-  "Black Olives",
-  "Onions",
-  "Jalapeños",
-  "Extra Cheese"
+[
+  %{name: "Chicken", price_adjustment: 0, position: 10},
+  %{name: "Shrimp", price_adjustment: 400, position: 20},
+  %{name: "Churrasco", price_adjustment: 600, position: 30},
+  %{name: "Vegetable", price_adjustment: 0, position: 40}
 ]
+|> Enum.each(fn attrs ->
+  {:ok, _} =
+    Menu.create_modifier(%{
+      modifier_group_id: protein_group.id,
+      name: attrs.name,
+      price_adjustment: attrs.price_adjustment,
+      position: attrs.position
+    })
+end)
 
-toppings
-|> Enum.with_index(10)
+{:ok, spice_group} =
+  Menu.create_modifier_group(%{
+    restaurant_id: coqui.id,
+    name: "Spice Level",
+    min_selections: 0,
+    max_selections: 1
+  })
+
+["Mild", "Medium", "Picante"]
+|> Enum.with_index(1)
 |> Enum.each(fn {name, pos} ->
   {:ok, _} =
     Menu.create_modifier(%{
-      modifier_group_id: pizza_toppings.id,
+      modifier_group_id: spice_group.id,
       name: name,
-      price_adjustment: 150,
+      price_adjustment: 0,
       position: pos * 10
     })
 end)
 
-IO.puts("✅ Seeded Sal's Pizza modifier groups (Size, Extra Toppings)")
+{:ok, rice_group} =
+  Menu.create_modifier_group(%{
+    restaurant_id: coqui.id,
+    name: "Rice Choice",
+    min_selections: 0,
+    max_selections: 1
+  })
+
+[
+  %{name: "White Rice", price_adjustment: 0, position: 10},
+  %{name: "Arroz con Gandules", price_adjustment: 0, position: 20},
+  %{name: "Yellow Rice", price_adjustment: 100, position: 30}
+]
+|> Enum.each(fn attrs ->
+  {:ok, _} =
+    Menu.create_modifier(%{
+      modifier_group_id: rice_group.id,
+      name: attrs.name,
+      price_adjustment: attrs.price_adjustment,
+      position: attrs.position
+    })
+end)
+
+{:ok, sides_group} =
+  Menu.create_modifier_group(%{
+    restaurant_id: coqui.id,
+    name: "Add Sides",
+    min_selections: 0,
+    max_selections: nil
+  })
+
+[
+  %{name: "Maduros", price_adjustment: 300, position: 10},
+  %{name: "Tostones", price_adjustment: 300, position: 20},
+  %{name: "Habichuelas", price_adjustment: 250, position: 30}
+]
+|> Enum.each(fn attrs ->
+  {:ok, _} =
+    Menu.create_modifier(%{
+      modifier_group_id: sides_group.id,
+      name: attrs.name,
+      price_adjustment: attrs.price_adjustment,
+      position: attrs.position
+    })
+end)
+
+IO.puts(
+  "✅ Seeded El Coquí Kitchen modifier groups (Mofongo Protein, Spice Level, Rice Choice, Add Sides)"
+)
 
 # ─── Green Dragon Sushi Menu ──────────────────────────────────────────────
 
@@ -438,99 +537,88 @@ end)
 
 IO.puts("✅ Seeded Green Dragon modifier groups (Spice Level)")
 
-# ─── Demo Orders (associated with Sal's Pizza) ────────────────────────────
+# ─── Demo Orders (associated with El Coquí Kitchen) ────────────────────────────
 
 demo_orders = [
   %{
-    customer_name: "Marcus Chen",
-    phone: "(415) 555-0101",
-    items: ["Margherita Pizza (Large)", "Garlic Bread", "Tiramisu", "San Pellegrino"],
+    customer_name: "María Santos",
+    phone: "(787) 555-0101",
+    items: ["Mofongo de Pollo", "Tostones con Ajo", "Piña Colada (virgin)"],
     status: "new",
-    delivery_address: "742 Market St, San Francisco, CA 94103",
-    lat: 37.7897,
-    lng: -122.4001,
-    restaurant_id: sals.id
+    delivery_address: "742 Calle San Francisco, Old San Juan, PR 00901",
+    lat: 18.4660,
+    lng: -66.1075,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Priya Patel",
-    phone: "(415) 555-0102",
-    items: ["Pepperoni Pizza (Medium)", "Caesar Salad", "Diet Coke x2"],
+    customer_name: "José Rivera",
+    phone: "(787) 555-0102",
+    items: ["Pernil Asado", "Alcapurrias", "Malta India x2"],
     status: "preparing",
-    delivery_address: "1600 Fillmore St, San Francisco, CA 94115",
-    lat: 37.7843,
-    lng: -122.4329,
-    restaurant_id: sals.id
+    delivery_address: "456 Ave Ponce de León, Santurce, PR 00907",
+    lat: 18.4488,
+    lng: -66.0614,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Jordan Williams",
-    phone: "(415) 555-0103",
-    items: [
-      "BBQ Chicken Pizza (Large)",
-      "Buffalo Wings (12pc)",
-      "Ranch Dipping Sauce",
-      "Lemonade"
-    ],
+    customer_name: "Carmen López",
+    phone: "(787) 555-0103",
+    items: ["Churrasco a la Criolla", "Bacalaítos", "Café con Leche"],
     status: "out_for_delivery",
-    delivery_address: "555 California St, San Francisco, CA 94104",
-    lat: 37.7929,
-    lng: -122.4034,
-    restaurant_id: sals.id
+    delivery_address: "100 Calle Luna, Old San Juan, PR 00901",
+    lat: 18.4640,
+    lng: -66.1090,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Sofia Rosario",
-    phone: "(415) 555-0104",
-    items: ["Veggie Supreme Pizza (Small)", "Greek Salad"],
+    customer_name: "Luis Rodríguez",
+    phone: "(787) 555-0104",
+    items: ["Arroz con Gandules", "Sorullitos"],
     status: "delivered",
-    delivery_address: "2200 Judah St, San Francisco, CA 94122",
-    lat: 37.7612,
-    lng: -122.4871,
-    restaurant_id: sals.id
+    delivery_address: "789 Calle Comercio, Ponce, PR 00731",
+    lat: 18.0115,
+    lng: -66.6141,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Tyler Nguyen",
-    phone: "(415) 555-0105",
-    items: [
-      "Meat Lovers Pizza (XL)",
-      "Breadsticks (8pc)",
-      "Marinara Sauce",
-      "Root Beer x3",
-      "Chocolate Lava Cake"
-    ],
+    customer_name: "Ana García",
+    phone: "(787) 555-0105",
+    items: ["Pescado Frito", "Tostones con Ajo", "Jugo de Parcha"],
     status: "preparing",
-    delivery_address: "88 Divisadero St, San Francisco, CA 94117",
-    lat: 37.7732,
-    lng: -122.4376,
-    restaurant_id: sals.id
+    delivery_address: "222 Ave Fernández Juncos, San Juan, PR 00901",
+    lat: 18.4530,
+    lng: -66.0800,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Amara Johnson",
-    phone: "(415) 555-0106",
-    items: ["Hawaiian Pizza (Large)", "Mozzarella Sticks", "Sprite"],
+    customer_name: "Pedro Díaz",
+    phone: "(787) 555-0106",
+    items: ["Pollo Guisado", "Alcapurrias", "Coquito"],
     status: "new",
-    delivery_address: "1400 Valencia St, San Francisco, CA 94110",
-    lat: 37.7635,
-    lng: -122.4198,
-    restaurant_id: sals.id
+    delivery_address: "55 Calle Recinto Sur, Old San Juan, PR 00901",
+    lat: 18.4620,
+    lng: -66.1030,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Devon Kim",
-    phone: "(415) 555-0107",
-    items: ["Four Cheese Pizza (Medium)", "Caprese Salad", "Sparkling Water"],
+    customer_name: "Rosa Martínez",
+    phone: "(787) 555-0107",
+    items: ["Mofongo de Pollo", "Tembleque", "Malta India"],
     status: "out_for_delivery",
-    delivery_address: "450 Hayes St, San Francisco, CA 94102",
-    lat: 37.7762,
-    lng: -122.4232,
-    restaurant_id: sals.id
+    delivery_address: "340 Calle Canals, Santurce, PR 00907",
+    lat: 18.4500,
+    lng: -66.0650,
+    restaurant_id: coqui.id
   },
   %{
-    customer_name: "Isabella Torres",
-    phone: "(415) 555-0108",
-    items: ["Spicy Arrabbiata Pizza", "Cannoli (2pc)"],
+    customer_name: "Carlos Colón",
+    phone: "(787) 555-0108",
+    items: ["Pernil Asado", "Flan de Queso"],
     status: "delivered",
-    delivery_address: "3200 16th St, San Francisco, CA 94103",
-    lat: 37.7651,
-    lng: -122.4294,
-    restaurant_id: sals.id
+    delivery_address: "18 Calle Mayor, Ponce, PR 00730",
+    lat: 18.0125,
+    lng: -66.6120,
+    restaurant_id: coqui.id
   }
 ]
 
@@ -538,4 +626,4 @@ Enum.each(demo_orders, fn attrs ->
   {:ok, _order} = Orders.create_order(attrs)
 end)
 
-IO.puts("✅ Seeded #{length(demo_orders)} demo orders for #{sals.name}")
+IO.puts("✅ Seeded #{length(demo_orders)} demo orders for #{coqui.name}")

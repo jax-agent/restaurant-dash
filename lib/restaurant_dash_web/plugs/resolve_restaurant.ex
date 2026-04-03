@@ -2,12 +2,12 @@ defmodule RestaurantDashWeb.Plugs.ResolveRestaurant do
   @moduledoc """
   Plug that extracts the restaurant from the request subdomain.
 
-  When a request comes in for `sals-pizza.restaurantdash.com`, this plug
-  extracts `sals-pizza`, looks up the restaurant by slug, and assigns it
+  When a request comes in for `el-coqui-kitchen.restaurantdash.com`, this plug
+  extracts `el-coqui-kitchen`, looks up the restaurant by slug, and assigns it
   as `current_restaurant` on the conn.
 
   In development/test, it checks for a `restaurant_slug` query param as
-  a fallback (e.g., `/?restaurant_slug=sals-pizza`).
+  a fallback (e.g., `/?restaurant_slug=el-coqui-kitchen`).
   """
 
   import Plug.Conn
@@ -28,7 +28,7 @@ defmodule RestaurantDashWeb.Plugs.ResolveRestaurant do
     end
   end
 
-  # Extract slug from subdomain (e.g., "sals-pizza" from "sals-pizza.restaurantdash.com")
+  # Extract slug from subdomain (e.g., "el-coqui-kitchen" from "el-coqui-kitchen.restaurantdash.com")
   # Falls back to ?restaurant_slug= query param in dev/test
   defp extract_slug(conn) do
     host = conn.host
@@ -38,7 +38,7 @@ defmodule RestaurantDashWeb.Plugs.ResolveRestaurant do
       subdomain_slug = extract_from_host(host) ->
         subdomain_slug
 
-      # Dev/test fallback: ?restaurant_slug=sals-pizza
+      # Dev/test fallback: ?restaurant_slug=el-coqui-kitchen
       slug = conn.query_params["restaurant_slug"] ->
         slug
 
@@ -48,7 +48,7 @@ defmodule RestaurantDashWeb.Plugs.ResolveRestaurant do
   end
 
   defp extract_from_host(host) do
-    # Split host into parts: "sals-pizza.restaurantdash.com" → ["sals-pizza", "restaurantdash", "com"]
+    # Split host into parts: "el-coqui-kitchen.restaurantdash.com" → ["el-coqui-kitchen", "restaurantdash", "com"]
     parts = String.split(host, ".")
 
     # Only treat as subdomain if there are at least 3 parts (subdomain.domain.tld)
