@@ -86,10 +86,10 @@ defmodule RestaurantDashWeb.PublicMenuLive do
   def render(assigns) do
     ~H"""
     <%= if @not_found do %>
-      <div class="min-h-screen flex items-center justify-center" style="background: #FAFAFA;">
+      <div class="min-h-screen flex items-center justify-center" style="background: #0A0A0A;">
         <div class="text-center px-4 animate-fade-up">
           <div class="text-6xl mb-6">🔍</div>
-          <h1 class="text-2xl font-bold text-gray-900 mb-2">Restaurant not found</h1>
+          <h1 class="text-2xl font-bold text-white mb-2">Restaurant not found</h1>
           <p class="text-gray-500 mb-6">
             The restaurant you're looking for doesn't exist or has moved.
           </p>
@@ -104,7 +104,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
     <% else %>
       <div
         class="min-h-screen"
-        style="background: #FAFAFA; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+        style="background: #0A0A0A; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
       >
         <%!-- ═══ RESTAURANT HERO HEADER ═══ --%>
         <header
@@ -125,11 +125,11 @@ defmodule RestaurantDashWeb.PublicMenuLive do
               <%= case @open_status do %>
                 <% {:open} -> %>
                   <span class="inline-flex items-center gap-1.5 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg badge-open-pulse">
-                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span> Open Now
+                    <span class="w-1.5 h-1.5 bg-[#111] rounded-full"></span> Open Now
                   </span>
                 <% {:closed, reason} -> %>
                   <span class="inline-flex items-center gap-1.5 bg-black/30 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    <span class="w-1.5 h-1.5 bg-white/60 rounded-full"></span> Closed — {reason}
+                    <span class="w-1.5 h-1.5 bg-[#111]/60 rounded-full"></span> Closed — {reason}
                   </span>
               <% end %>
 
@@ -160,7 +160,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
           <%= unless Cart.empty?(@cart) do %>
             <a
               href="/checkout"
-              class="absolute top-4 right-4 sm:right-6 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-semibold transition-all border border-white/30 shadow-lg"
+              class="absolute top-4 right-4 sm:right-6 flex items-center gap-2 bg-[#111]/20 hover:bg-[#111]/30 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-semibold transition-all border border-white/30 shadow-lg"
             >
               <span>🛒</span>
               <span class="font-bold">{Cart.item_count(@cart)}</span>
@@ -172,7 +172,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
         <%!-- ═══ STICKY CATEGORY NAV ═══ --%>
         <%= if length(@menu) > 1 do %>
           <nav
-            class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
+            class="sticky top-0 z-20 bg-[#111]/95 backdrop-blur-md border-b border-[#222] shadow-sm"
             aria-label="Menu categories"
           >
             <div class="menu-category-nav">
@@ -203,7 +203,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                 <div class="flex items-center gap-3 mb-6">
                   <span class="text-3xl">{category_emoji(category.name)}</span>
                   <div>
-                    <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+                    <h2 class="text-2xl font-extrabold text-white tracking-tight">
                       {category.name}
                     </h2>
                     <%= if category.description do %>
@@ -213,7 +213,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                 </div>
 
                 <%= if Enum.empty?(items) do %>
-                  <p class="text-gray-400 text-sm py-4">No items in this category yet.</p>
+                  <p class="text-gray-500 text-sm py-4">No items in this category yet.</p>
                 <% else %>
                   <div class="space-y-3">
                     <%= for item <- items do %>
@@ -242,7 +242,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                           <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
                               <div class="flex items-center gap-2 flex-wrap mb-1">
-                                <h3 class="font-bold text-gray-900 text-base leading-tight">
+                                <h3 class="font-bold text-white text-base leading-tight">
                                   {item.name}
                                 </h3>
                                 <%= unless item.is_available do %>
@@ -259,7 +259,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
                               <% end %>
 
                               <%= if length(item.modifier_groups) > 0 do %>
-                                <p class="text-xs text-gray-400 mt-1.5">
+                                <p class="text-xs text-gray-500 mt-1.5">
                                   {Enum.map_join(item.modifier_groups, " · ", & &1.name)}
                                 </p>
                               <% end %>
@@ -294,10 +294,10 @@ defmodule RestaurantDashWeb.PublicMenuLive do
         </main>
 
         <%!-- ═══ FOOTER ═══ --%>
-        <footer class="text-center py-8 text-xs text-gray-400 border-t border-gray-100 mt-8">
+        <footer class="text-center py-8 text-xs text-gray-500 border-t border-[#222] mt-8">
           <p>
             Powered by{" "}
-            <a href="/" class="font-semibold text-gray-600 hover:text-gray-800 transition-colors">
+            <a href="/" class="font-semibold text-gray-500 hover:text-white transition-colors">
               Order Base
             </a>
           </p>
@@ -309,8 +309,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
           <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
             <a
               href="/checkout"
-              class="flex items-center gap-4 text-white font-bold px-8 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-[1.02] transition-all active:scale-[0.98]"
-              style={"background: linear-gradient(135deg, #{darken(@restaurant.primary_color)}, #{@restaurant.primary_color})"}
+              class="flex items-center gap-4 text-white font-semibold px-8 py-3.5 rounded-xl bg-[#E63946] hover:bg-[#D32F3F] transition-all"
             >
               <span class="text-lg">🛒</span>
               <span>

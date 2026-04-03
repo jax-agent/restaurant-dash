@@ -58,19 +58,26 @@
         </div>
       </div>
     <% end %>
-    <%!-- User bar: desktop only, clean minimal style --%>
+    <%!-- User bar: desktop only, dark minimal style --%>
     <%= if @current_scope do %>
-      <div class="user-bar hidden md:flex">
-        <span class="text-gray-400 hidden lg:block">{@current_scope.user.email}</span>
-        <.link href={~p"/users/settings"} class="hover:text-gray-800">Settings</.link>
-        <.link href={~p"/users/log-out"} method="delete" class="text-red-500 hover:text-red-700">
+      <div class="user-bar hidden md:flex" style="background: #111; border-color: #222;">
+        <span class="text-gray-500 hidden lg:block">{@current_scope.user.email}</span>
+        <.link href={~p"/users/settings"} class="hover:text-white" style="color: #888;">
+          Settings
+        </.link>
+        <.link
+          href={~p"/users/log-out"}
+          method="delete"
+          class="hover:text-red-400"
+          style="color: #666;"
+        >
           Log out
         </.link>
       </div>
     <% else %>
-      <div class="user-bar hidden md:flex">
-        <.link href={~p"/users/register"}>Register</.link>
-        <.link href={~p"/users/log-in"}>Log in</.link>
+      <div class="user-bar hidden md:flex" style="background: #111; border-color: #222;">
+        <.link href={~p"/users/register"} style="color: #888;">Register</.link>
+        <.link href={~p"/users/log-in"} style="color: #888;">Log in</.link>
       </div>
     <% end %>
     {@inner_content}

@@ -65,11 +65,11 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
     ~H"""
     <div
       class="min-h-screen"
-      style="background: #FAFAFA; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+      style="background: #0A0A0A; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
     >
       <%!-- ═══ HEADER ═══ --%>
       <header
-        class="bg-white/95 backdrop-blur-md border-b sticky top-0 z-30"
+        class="dashboard-header"
         style="border-color: #F3F4F6; box-shadow: 0 1px 0 rgba(0,0,0,0.04);"
       >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
@@ -82,10 +82,10 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
               {String.first(@restaurant.name)}
             </div>
             <div>
-              <h1 class="text-[15px] font-bold text-gray-900 leading-tight tracking-tight">
+              <h1 class="text-sm font-semibold text-white">
                 {@restaurant.name}
               </h1>
-              <p class="text-xs text-gray-400 hidden sm:block font-medium">Owner Dashboard</p>
+              <p class="text-xs text-gray-500 hidden sm:block">Owner Dashboard</p>
             </div>
           </div>
 
@@ -101,7 +101,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             ] do %>
               <a
                 href={href}
-                class="px-3 py-1.5 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-50 font-medium transition-all text-[13px]"
+                class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 font-medium transition-all text-[13px]"
               >
                 {label}
               </a>
@@ -145,7 +145,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
         </div>
 
         <%!-- Mobile nav drawer --%>
-        <div id="mobile-nav" class="hidden md:hidden border-t bg-white" style="border-color: #F3F4F6;">
+        <div id="mobile-nav" class="hidden md:hidden border-t border-gray-800 bg-[#0A0A0A];">
           <nav class="px-4 py-3 space-y-0.5">
             <a href="/dashboard/orders" class="mobile-nav-link">📋 Orders</a>
             <a href="/dashboard/menu" class="mobile-nav-link">🍽️ Menu</a>
@@ -181,7 +181,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
               <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
                 Today's Revenue
               </p>
-              <p class="text-3xl font-extrabold text-gray-900 tracking-tight">
+              <p class="text-2xl font-bold text-white tracking-tight">
                 {Analytics.format_money(@analytics.today_revenue)}
               </p>
               <div class="mt-2 flex items-center gap-1 text-xs">
@@ -194,7 +194,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             <div class="stat-card stat-card--blue">
               <div class="stat-icon stat-icon--blue">📋</div>
               <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Orders</p>
-              <p class="text-3xl font-extrabold text-gray-900 tracking-tight">
+              <p class="text-2xl font-bold text-white tracking-tight">
                 {@analytics.today_orders}
               </p>
               <div class="mt-2 flex items-center gap-1 text-xs">
@@ -209,7 +209,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
               <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
                 Avg Order
               </p>
-              <p class="text-3xl font-extrabold text-gray-900 tracking-tight">
+              <p class="text-2xl font-bold text-white tracking-tight">
                 {Analytics.format_money(@analytics.today_avg_order)}
               </p>
               <p class="text-xs text-gray-400 mt-2">Today's average</p>
@@ -219,7 +219,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
             <div class="stat-card stat-card--orange">
               <div class="stat-icon stat-icon--orange">🔥</div>
               <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Active</p>
-              <p class="text-3xl font-extrabold text-gray-900 tracking-tight">
+              <p class="text-2xl font-bold text-white tracking-tight">
                 {@analytics.active_orders}
               </p>
               <%= if @analytics.avg_delivery_minutes do %>
@@ -236,7 +236,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
         <%!-- Total Orders (legacy test requirement) --%>
         <div class="flex items-center gap-6 text-sm">
           <span class="text-gray-400 font-medium">Total Orders</span>
-          <span class="font-bold text-gray-900">{@total_count}</span>
+          <span class="font-bold text-white">{@total_count}</span>
         </div>
 
         <%!-- ═══ QUICK ACTIONS ═══ --%>
@@ -251,7 +251,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
 
         <%!-- ═══ ORDER STATUS BREAKDOWN ═══ --%>
         <div
-          class="bg-white rounded-2xl border p-6"
+          class="bg-[#141414] border border-gray-800 rounded-xl p-5"
           style="border-color: #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.06);"
         >
           <div class="section-header">
@@ -278,7 +278,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
 
         <%!-- ═══ RECENT ORDERS (card-based) ═══ --%>
         <div
-          class="bg-white rounded-2xl border p-6"
+          class="bg-[#141414] border border-gray-800 rounded-xl p-5"
           style="border-color: #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.06);"
         >
           <div class="section-header">
@@ -304,7 +304,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
                 >
                   <div class="flex items-center gap-3 flex-1 min-w-0">
                     <div class="min-w-0">
-                      <p class="font-semibold text-gray-900 text-sm truncate">
+                      <p class="font-medium text-white text-sm truncate">
                         {order.customer_name}
                       </p>
                       <p class="text-xs text-gray-400">
@@ -324,7 +324,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
         <%!-- ═══ DRIVER RATINGS ═══ --%>
         <%= if length(@driver_ratings) > 0 do %>
           <div
-            class="bg-white rounded-2xl border p-6"
+            class="bg-[#141414] border border-gray-800 rounded-xl p-5"
             style="border-color: #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.06);"
           >
             <div class="section-header">
@@ -360,7 +360,7 @@ defmodule RestaurantDashWeb.OwnerDashboardLive do
         <%!-- ═══ DRIVER EARNINGS ═══ --%>
         <%= if length(@earnings) > 0 do %>
           <div
-            class="bg-white rounded-2xl border p-6"
+            class="bg-[#141414] border border-gray-800 rounded-xl p-5"
             style="border-color: #F3F4F6; box-shadow: 0 1px 3px rgba(0,0,0,0.06);"
           >
             <div class="section-header">
