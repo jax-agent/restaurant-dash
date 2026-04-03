@@ -27,11 +27,20 @@ defmodule RestaurantDashWeb.LandingLive do
       <header class="bg-gradient-to-br from-red-500 to-orange-400 text-white">
         <div class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <span class="text-2xl">🍕</span>
-            <span class="text-xl font-bold">RestaurantDash</span>
+            <%!-- OrderBase logo: coral-red rounded square with O↗ --%>
+            <span style="background:#E63946;border-radius:8px;width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;flex-shrink:0;">
+              O↗
+            </span>
+            <span class="text-xl font-bold">OrderBase</span>
           </div>
           <nav class="flex items-center gap-4 text-sm">
             <a href="/users/log-in" class="hover:text-red-100 font-medium">Log in</a>
+            <a
+              href="/demo"
+              class="border-2 border-white text-white hover:bg-white/20 font-semibold px-4 py-2 rounded-lg transition-colors"
+            >
+              Try Demo →
+            </a>
             <a
               href="/signup"
               class="bg-white text-red-500 hover:bg-red-50 font-semibold px-4 py-2 rounded-lg transition-colors"
@@ -46,7 +55,7 @@ defmodule RestaurantDashWeb.LandingLive do
             Launch Your Own <br />Delivery Platform
           </h1>
           <p class="text-xl text-red-100 mb-10 max-w-2xl mx-auto">
-            RestaurantDash gives you everything you need to manage orders, track deliveries,
+            OrderBase gives you everything you need to manage orders, track deliveries,
             and grow your restaurant — all in one place.
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -57,12 +66,19 @@ defmodule RestaurantDashWeb.LandingLive do
               Start for Free →
             </a>
             <a
+              href="/demo"
+              class="bg-red-600/80 hover:bg-red-700/80 border-2 border-white/30 text-white font-bold px-8 py-4 rounded-xl text-lg transition-colors shadow-lg"
+            >
+              🎯 Try Demo
+            </a>
+            <a
               href="/users/log-in"
               class="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-4 rounded-xl text-lg transition-colors"
             >
               Log in
             </a>
           </div>
+          <p class="mt-4 text-red-200 text-sm">No signup required for demo · Full dashboard access</p>
         </div>
       </header>
 
@@ -111,17 +127,25 @@ defmodule RestaurantDashWeb.LandingLive do
           <p class="text-red-100 mb-8 text-lg">
             Set up your restaurant in under 5 minutes. No credit card required.
           </p>
-          <a
-            href="/signup"
-            class="bg-white text-red-500 hover:bg-red-50 font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors shadow-lg"
-          >
-            Create Your Restaurant →
-          </a>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="/signup"
+              class="bg-white text-red-500 hover:bg-red-50 font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors shadow-lg"
+            >
+              Create Your Restaurant →
+            </a>
+            <a
+              href="/demo"
+              class="border-2 border-white text-white hover:bg-white/10 font-bold px-10 py-4 rounded-xl text-lg inline-block transition-colors"
+            >
+              🎯 Explore Demo First
+            </a>
+          </div>
         </div>
       </section>
 
       <footer class="bg-gray-900 text-gray-400 py-8 text-center text-sm">
-        <p>© 2026 RestaurantDash. Built for independent restaurants.</p>
+        <p>© 2026 OrderBase. Built for independent restaurants.</p>
       </footer>
     </div>
     """

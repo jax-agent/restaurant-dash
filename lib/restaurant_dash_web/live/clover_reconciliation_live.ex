@@ -122,7 +122,7 @@ defmodule RestaurantDashWeb.CloverReconciliationLive do
           <div class="flex items-center justify-between mb-6">
             <div>
               <p class="text-sm text-gray-500">
-                Reconcile payments between RestaurantDash and your Clover POS
+                Reconcile payments between OrderBase and your Clover POS
               </p>
             </div>
             <div class="flex gap-3">

@@ -17,7 +17,9 @@ defmodule RestaurantDashWeb.UserAuth do
       on_mount {RestaurantDashWeb.UserAuth, :mount_current_user}
   """
   def on_mount(:mount_current_user, _params, session, socket) do
-    {:cont, mount_current_user(socket, session)}
+    socket = mount_current_user(socket, session)
+    socket = Phoenix.Component.assign(socket, :demo_mode, session["demo_mode"] == true)
+    {:cont, socket}
   end
 
   def on_mount(:require_authenticated_user, _params, session, socket) do

@@ -9,7 +9,7 @@ defmodule RestaurantDash.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"RestaurantDash", "contact@example.com"})
+      |> from({"OrderBase", "contact@example.com"})
       |> subject(subject)
       |> text_body(body)
 

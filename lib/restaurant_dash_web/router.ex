@@ -11,6 +11,7 @@ defmodule RestaurantDashWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_scope_for_user
+    plug RestaurantDashWeb.Plugs.DemoMode
     plug RestaurantDashWeb.Plugs.ResolveRestaurant
   end
 
@@ -35,6 +36,7 @@ defmodule RestaurantDashWeb.Router do
     pipe_through :browser
 
     live "/", LandingLive, :index
+    get "/demo", DemoController, :index
     live "/menu", PublicMenuLive, :index
     live "/menu/:id", ItemDetailLive, :show
     live "/signup", OnboardingLive, :new

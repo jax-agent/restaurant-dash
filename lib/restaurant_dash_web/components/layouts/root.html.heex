@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="RestaurantDash">
+    <.live_title default="OrderBase">
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
@@ -16,6 +16,21 @@
     </script>
   </head>
   <body>
+    <%!-- Demo mode banner --%>
+    <%= if Map.get(assigns, :demo_mode, false) do %>
+      <div class="w-full bg-amber-500 text-white text-center py-2 px-4 text-sm font-medium flex items-center justify-center gap-3">
+        <span>
+          🎯 You're exploring <strong>OrderBase</strong>
+          in demo mode — all changes are reset periodically
+        </span>
+        <a
+          href="/signup"
+          class="bg-white text-amber-600 hover:bg-amber-50 font-bold px-3 py-1 rounded-lg text-xs transition-colors"
+        >
+          Sign up for real →
+        </a>
+      </div>
+    <% end %>
     <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
       <%= if @current_scope do %>
         <li>

@@ -250,7 +250,7 @@ defmodule RestaurantDashWeb.PublicMenuLive do
         <%!-- Footer --%>
         <footer class="text-center py-8 text-xs text-gray-400 border-t border-gray-200 mt-8">
           <p>
-            Powered by <span class="font-medium">RestaurantDash</span>
+            Powered by <span class="font-medium">OrderBase</span>
           </p>
         </footer>
 
