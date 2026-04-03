@@ -8,6 +8,13 @@
       {assigns[:page_title]}
     </.live_title>
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <%!-- Inter font from Google Fonts --%>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    />
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <%!-- Leaflet via CDN (avoids esbuild PNG bundling issues) --%>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
@@ -17,46 +24,55 @@
     </script>
   </head>
   <body>
-    <%!-- Demo mode banner --%>
+    <%!-- Demo mode banner — sleek, blurred, dismissible --%>
     <%= if Map.get(assigns, :demo_mode, false) do %>
-      <div class="w-full bg-amber-500 text-white text-center py-2 px-4 text-sm font-medium flex items-center justify-center gap-2 flex-wrap">
-        <span class="text-xs sm:text-sm">
-          🎯
-          <span class="hidden sm:inline">
-            You're exploring <strong>Order Base</strong>
-            in demo mode — all changes are reset periodically
-          </span>
-          <span class="sm:hidden"><strong>Demo mode</strong> — resets periodically</span>
-        </span>
-        <a
-          href="/signup"
-          class="bg-white text-amber-600 hover:bg-amber-50 font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg text-xs transition-colors whitespace-nowrap"
-        >
-          Sign up →
-        </a>
+      <div
+        class="demo-banner"
+        id="demo-banner"
+        role="alert"
+      >
+        <div class="max-w-7xl mx-auto px-4 h-10 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2 text-white">
+            <span class="text-sm">🎯</span>
+            <span class="text-xs sm:text-sm font-medium text-white/90">
+              <span class="hidden sm:inline">
+                Exploring <strong class="text-white">Order Base</strong>
+                in demo mode — changes reset periodically
+              </span>
+              <span class="sm:hidden font-semibold text-white">Demo mode</span>
+            </span>
+            <a
+              href="/signup"
+              class="ml-2 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1 rounded-full border border-white/30 transition-all whitespace-nowrap"
+            >
+              Sign up free →
+            </a>
+          </div>
+          <button
+            onclick="document.getElementById('demo-banner').style.display='none'"
+            class="text-white/60 hover:text-white transition-colors ml-2 flex-shrink-0 text-lg leading-none"
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
       </div>
     <% end %>
-    <%!-- User bar: hidden on mobile (owner dashboard has its own mobile nav), visible on desktop --%>
-    <ul class="menu menu-horizontal w-full relative z-10 items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end hidden md:flex">
-      <%= if @current_scope do %>
-        <li class="text-sm text-gray-500 hidden lg:block">
-          {@current_scope.user.email}
-        </li>
-        <li>
-          <.link href={~p"/users/settings"}>Settings</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-        </li>
-      <% else %>
-        <li>
-          <.link href={~p"/users/register"}>Register</.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log-in"}>Log in</.link>
-        </li>
-      <% end %>
-    </ul>
+    <%!-- User bar: desktop only, clean minimal style --%>
+    <%= if @current_scope do %>
+      <div class="user-bar hidden md:flex">
+        <span class="text-gray-400 hidden lg:block">{@current_scope.user.email}</span>
+        <.link href={~p"/users/settings"} class="hover:text-gray-800">Settings</.link>
+        <.link href={~p"/users/log-out"} method="delete" class="text-red-500 hover:text-red-700">
+          Log out
+        </.link>
+      </div>
+    <% else %>
+      <div class="user-bar hidden md:flex">
+        <.link href={~p"/users/register"}>Register</.link>
+        <.link href={~p"/users/log-in"}>Log in</.link>
+      </div>
+    <% end %>
     {@inner_content}
   </body>
 </html>

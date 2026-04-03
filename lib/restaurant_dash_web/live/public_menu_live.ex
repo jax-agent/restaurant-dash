@@ -86,155 +86,201 @@ defmodule RestaurantDashWeb.PublicMenuLive do
   def render(assigns) do
     ~H"""
     <%= if @not_found do %>
-      <div class="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div class="text-center">
-          <p class="text-2xl font-bold text-gray-800">Restaurant not found</p>
-          <p class="text-gray-500 mt-2">The restaurant you're looking for doesn't exist.</p>
-          <a href="/" class="mt-4 inline-block text-blue-600 hover:underline">Go home</a>
+      <div class="min-h-screen flex items-center justify-center" style="background: #FAFAFA;">
+        <div class="text-center px-4 animate-fade-up">
+          <div class="text-6xl mb-6">🔍</div>
+          <h1 class="text-2xl font-bold text-gray-900 mb-2">Restaurant not found</h1>
+          <p class="text-gray-500 mb-6">
+            The restaurant you're looking for doesn't exist or has moved.
+          </p>
+          <a
+            href="/"
+            class="btn-primary inline-flex"
+          >
+            ← Back home
+          </a>
         </div>
       </div>
     <% else %>
-      <div class="min-h-screen bg-gray-50">
-        <%!-- Header / Hero --%>
+      <div
+        class="min-h-screen"
+        style="background: #FAFAFA; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;"
+      >
+        <%!-- ═══ RESTAURANT HERO HEADER ═══ --%>
         <header
-          class="text-white py-10 px-6 text-center relative"
-          style={"background-color: #{@restaurant.primary_color}"}
+          class="relative text-white overflow-hidden"
+          style={"background: linear-gradient(135deg, #{darken(@restaurant.primary_color)}, #{@restaurant.primary_color})"}
         >
-          <h1 class="text-3xl font-bold">{@restaurant.name}</h1>
-          <div class="flex items-center justify-center gap-3 mt-2">
-            <%!-- Open/Closed badge --%>
-            <%= case @open_status do %>
-              <% {:open} -> %>
-                <span class="bg-green-500/90 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                  ● Open Now
-                </span>
-              <% {:closed, reason} -> %>
-                <span class="bg-red-500/80 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                  Closed — {reason}
-                </span>
+          <%!-- Subtle pattern overlay --%>
+          <div class="absolute inset-0 menu-hero-dots"></div>
+
+          <div class="relative z-10 px-4 sm:px-6 py-10 sm:py-14 text-center max-w-3xl mx-auto">
+            <%!-- Restaurant name --%>
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight mb-3 text-white drop-shadow-sm">
+              {@restaurant.name}
+            </h1>
+
+            <%!-- Status + Rating row --%>
+            <div class="flex items-center justify-center gap-3 flex-wrap mb-3">
+              <%= case @open_status do %>
+                <% {:open} -> %>
+                  <span class="inline-flex items-center gap-1.5 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg badge-open-pulse">
+                    <span class="w-1.5 h-1.5 bg-white rounded-full"></span> Open Now
+                  </span>
+                <% {:closed, reason} -> %>
+                  <span class="inline-flex items-center gap-1.5 bg-black/30 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <span class="w-1.5 h-1.5 bg-white/60 rounded-full"></span> Closed — {reason}
+                  </span>
+              <% end %>
+
+              <%= if @avg_rating do %>
+                <a
+                  href={"/reviews?restaurant_slug=#{@restaurant.slug}"}
+                  class="inline-flex items-center gap-1 text-yellow-300 hover:text-yellow-100 font-semibold text-sm transition-colors"
+                >
+                  ★ {Float.round(@avg_rating, 1)}
+                  <span class="text-white/60 font-normal">({@review_count})</span>
+                </a>
+              <% end %>
+            </div>
+
+            <%= if @restaurant.description do %>
+              <p class="text-white/80 text-sm sm:text-base mt-2 max-w-md mx-auto leading-relaxed">
+                {@restaurant.description}
+              </p>
             <% end %>
-            <%!-- Average Rating --%>
-            <%= if @avg_rating do %>
-              <a
-                href={"/reviews?restaurant_slug=#{@restaurant.slug}"}
-                class="text-yellow-300 text-sm hover:text-yellow-100"
-              >
-                ★ {Float.round(@avg_rating, 1)} ({@review_count})
-              </a>
+            <%= if @restaurant.address do %>
+              <p class="text-white/60 text-xs mt-2">
+                📍 {@restaurant.address}, {@restaurant.city}, {@restaurant.state}
+              </p>
             <% end %>
           </div>
-          <%= if @restaurant.description do %>
-            <p class="mt-2 text-white/80 text-sm max-w-lg mx-auto">{@restaurant.description}</p>
-          <% end %>
-          <%= if @restaurant.address do %>
-            <p class="mt-1 text-white/70 text-xs">
-              {@restaurant.address}, {@restaurant.city}, {@restaurant.state}
-            </p>
-          <% end %>
 
-          <%!-- Cart Button (top-right) --%>
+          <%!-- Cart button top-right --%>
           <%= unless Cart.empty?(@cart) do %>
             <a
               href="/checkout"
-              class="absolute top-4 right-6 flex items-center gap-2 bg-white/20 hover:bg-white/30 rounded-full px-4 py-2 text-sm font-medium transition-colors"
+              class="absolute top-4 right-4 sm:right-6 flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full px-4 py-2 text-sm font-semibold transition-all border border-white/30 shadow-lg"
             >
               <span>🛒</span>
-              <span class="font-semibold">{Cart.item_count(@cart)}</span>
-              <span class="text-white/80">
-                {format_price(Cart.calculate_totals(@cart).subtotal)}
-              </span>
+              <span class="font-bold">{Cart.item_count(@cart)}</span>
+              <span class="text-white/80">{format_price(Cart.calculate_totals(@cart).subtotal)}</span>
             </a>
           <% end %>
         </header>
 
-        <%!-- Sticky category nav --%>
+        <%!-- ═══ STICKY CATEGORY NAV ═══ --%>
         <%= if length(@menu) > 1 do %>
-          <nav class="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
+          <nav
+            class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
+            aria-label="Menu categories"
+          >
             <div class="menu-category-nav">
               <%= for {cat, _items} <- @menu do %>
                 <a
                   href={"#cat-#{cat.id}"}
-                  class="text-sm font-medium px-4 py-2 rounded-full whitespace-nowrap hover:bg-gray-100 transition-colors min-h-[44px] flex items-center"
+                  class="menu-category-pill"
                 >
-                  {cat.name}
+                  {category_emoji(cat.name)} {cat.name}
                 </a>
               <% end %>
             </div>
           </nav>
         <% end %>
 
-        <%!-- Menu sections --%>
-        <main class="max-w-4xl mx-auto px-6 py-8 space-y-12">
+        <%!-- ═══ MENU CONTENT ═══ --%>
+        <main class="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-10 space-y-14">
           <%= if Enum.empty?(@menu) do %>
-            <div class="text-center py-16">
-              <p class="text-gray-400 text-lg">No menu items available yet.</p>
+            <div class="empty-state">
+              <span class="empty-state-icon">🍽</span>
+              <h2 class="empty-state-title">Menu coming soon</h2>
+              <p class="empty-state-text">No items available yet — check back soon!</p>
             </div>
           <% else %>
             <%= for {category, items} <- @menu do %>
               <section id={"cat-#{category.id}"} class="scroll-mt-20">
-                <div class="mb-6">
-                  <h2 class="text-2xl font-bold text-gray-900">{category.name}</h2>
-                  <%= if category.description do %>
-                    <p class="text-gray-500 text-sm mt-1">{category.description}</p>
-                  <% end %>
+                <%!-- Category header --%>
+                <div class="flex items-center gap-3 mb-6">
+                  <span class="text-3xl">{category_emoji(category.name)}</span>
+                  <div>
+                    <h2 class="text-2xl font-extrabold text-gray-900 tracking-tight">
+                      {category.name}
+                    </h2>
+                    <%= if category.description do %>
+                      <p class="text-gray-500 text-sm mt-0.5">{category.description}</p>
+                    <% end %>
+                  </div>
                 </div>
 
                 <%= if Enum.empty?(items) do %>
-                  <p class="text-gray-400 text-sm">No items in this category.</p>
+                  <p class="text-gray-400 text-sm py-4">No items in this category yet.</p>
                 <% else %>
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="space-y-3">
                     <%= for item <- items do %>
                       <a
                         href={"/menu/#{item.id}?restaurant_slug=#{@restaurant.slug}"}
-                        class={"menu-item-card #{unless item.is_available, do: "opacity-70"}"}
+                        class={"menu-item-card #{unless item.is_available, do: "opacity-60"}"}
                         id={"item-#{item.id}"}
                       >
-                        <%!-- Image: hidden on mobile if no real image, shown with emoji placeholder on sm+ --%>
-                        <div class={"menu-item-image #{if item.image_url, do: "", else: "hidden sm:flex"}"}>
-                          <%= if item.image_url do %>
+                        <%!-- Emoji/image area --%>
+                        <%= if item.image_url do %>
+                          <div class="menu-item-image">
                             <img
                               src={item.image_url}
                               alt={item.name}
                               class="w-full h-full object-cover"
                             />
-                          <% else %>
-                            <span class="text-3xl">🍽️</span>
-                          <% end %>
-                        </div>
+                          </div>
+                        <% else %>
+                          <div class="menu-item-emoji hidden sm:flex">
+                            {item_emoji(item.name)}
+                          </div>
+                        <% end %>
 
-                        <%!-- Info --%>
-                        <div class="flex-1 min-w-0">
-                          <div class="flex items-start justify-between gap-2">
-                            <div class="flex-1">
-                              <div class="flex items-center gap-2 flex-wrap">
-                                <h3 class="font-semibold text-gray-900 text-sm">{item.name}</h3>
+                        <%!-- Item info --%>
+                        <div class="flex-1 min-w-0 py-0.5">
+                          <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                              <div class="flex items-center gap-2 flex-wrap mb-1">
+                                <h3 class="font-bold text-gray-900 text-base leading-tight">
+                                  {item.name}
+                                </h3>
                                 <%= unless item.is_available do %>
-                                  <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200 text-gray-600">
-                                    Sold Out
+                                  <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                                    Sold out
                                   </span>
                                 <% end %>
                               </div>
+
                               <%= if item.description do %>
-                                <p class="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">
+                                <p class="text-gray-500 text-sm leading-relaxed line-clamp-2">
                                   {item.description}
                                 </p>
                               <% end %>
 
-                              <%!-- Modifiers preview --%>
                               <%= if length(item.modifier_groups) > 0 do %>
-                                <p class="text-xs text-gray-400 mt-1">
-                                  {Enum.map_join(item.modifier_groups, ", ", & &1.name)}
+                                <p class="text-xs text-gray-400 mt-1.5">
+                                  {Enum.map_join(item.modifier_groups, " · ", & &1.name)}
                                 </p>
                               <% end %>
                             </div>
 
-                            <div class="text-right flex-shrink-0">
+                            <%!-- Price + add button --%>
+                            <div class="flex flex-col items-end gap-2 flex-shrink-0">
                               <p
-                                class="font-bold text-sm"
+                                class="font-extrabold text-base tracking-tight"
                                 style={"color: #{@restaurant.primary_color}"}
                               >
                                 {format_price(item.price)}
                               </p>
+                              <%= if item.is_available do %>
+                                <span
+                                  class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md transition-transform hover:scale-110 active:scale-95"
+                                  style={"background: #{@restaurant.primary_color}"}
+                                >
+                                  +
+                                </span>
+                              <% end %>
                             </div>
                           </div>
                         </div>
@@ -247,24 +293,30 @@ defmodule RestaurantDashWeb.PublicMenuLive do
           <% end %>
         </main>
 
-        <%!-- Footer --%>
-        <footer class="text-center py-8 text-xs text-gray-400 border-t border-gray-200 mt-8">
+        <%!-- ═══ FOOTER ═══ --%>
+        <footer class="text-center py-8 text-xs text-gray-400 border-t border-gray-100 mt-8">
           <p>
-            Powered by <span class="font-medium">Order Base</span>
+            Powered by{" "}
+            <a href="/" class="font-semibold text-gray-600 hover:text-gray-800 transition-colors">
+              Order Base
+            </a>
           </p>
         </footer>
 
-        <%!-- Sticky Cart Bar (shows when cart has items) --%>
+        <%!-- ═══ STICKY CART BAR ═══ --%>
         <%= unless Cart.empty?(@cart) do %>
           <% totals = Cart.calculate_totals(@cart) %>
-          <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-up">
             <a
               href="/checkout"
-              class="flex items-center gap-4 text-white font-semibold px-8 py-4 rounded-full shadow-2xl hover:opacity-90 transition-all"
-              style={"background-color: #{@restaurant.primary_color}"}
+              class="flex items-center gap-4 text-white font-bold px-8 py-4 rounded-2xl shadow-2xl hover:shadow-3xl hover:scale-[1.02] transition-all active:scale-[0.98]"
+              style={"background: linear-gradient(135deg, #{darken(@restaurant.primary_color)}, #{@restaurant.primary_color})"}
             >
-              <span>🛒 {Cart.item_count(@cart)} item{if Cart.item_count(@cart) != 1, do: "s"}</span>
-              <span class="opacity-60">·</span>
+              <span class="text-lg">🛒</span>
+              <span>
+                {Cart.item_count(@cart)} item{if Cart.item_count(@cart) != 1, do: "s"}
+              </span>
+              <span class="opacity-50">·</span>
               <span>View Cart — {format_price(totals.total)}</span>
             </a>
           </div>
@@ -289,4 +341,75 @@ defmodule RestaurantDashWeb.PublicMenuLive do
   end
 
   defp format_price(_), do: "$0.00"
+
+  # Returns an emoji for the category based on name keywords
+  defp category_emoji(name) do
+    name_lower = String.downcase(name)
+
+    cond do
+      String.contains?(name_lower, ["drink", "beverage", "juice", "soda", "coffee", "tea", "agua"]) ->
+        "🥤"
+
+      String.contains?(name_lower, ["dessert", "postre", "sweet", "cake", "ice cream", "helado"]) ->
+        "🍮"
+
+      String.contains?(name_lower, ["appetizer", "starter", "snack", "entrada"]) ->
+        "🫕"
+
+      String.contains?(name_lower, ["pizza"]) ->
+        "🍕"
+
+      String.contains?(name_lower, ["burger", "sandwich", "sub"]) ->
+        "🍔"
+
+      String.contains?(name_lower, ["chicken", "pollo"]) ->
+        "🍗"
+
+      String.contains?(name_lower, ["seafood", "fish", "mariscos", "pescado"]) ->
+        "🦞"
+
+      String.contains?(name_lower, ["salad", "ensalada"]) ->
+        "🥗"
+
+      String.contains?(name_lower, ["soup", "sopa"]) ->
+        "🥣"
+
+      String.contains?(name_lower, ["breakfast", "desayuno", "brunch"]) ->
+        "🍳"
+
+      true ->
+        "🥘"
+    end
+  end
+
+  # Returns an emoji hint based on item name keywords
+  defp item_emoji(name) do
+    name_lower = String.downcase(name)
+
+    cond do
+      String.contains?(name_lower, ["pizza"]) -> "🍕"
+      String.contains?(name_lower, ["burger", "hamburger"]) -> "🍔"
+      String.contains?(name_lower, ["taco"]) -> "🌮"
+      String.contains?(name_lower, ["rice", "arroz"]) -> "🍚"
+      String.contains?(name_lower, ["chicken", "pollo"]) -> "🍗"
+      String.contains?(name_lower, ["fish", "pescado", "salmon"]) -> "🐟"
+      String.contains?(name_lower, ["steak", "carne", "beef"]) -> "🥩"
+      String.contains?(name_lower, ["pasta", "spaghetti"]) -> "🍝"
+      String.contains?(name_lower, ["salad", "ensalada"]) -> "🥗"
+      String.contains?(name_lower, ["soup", "sopa"]) -> "🥣"
+      String.contains?(name_lower, ["sandwich", "sub"]) -> "🥪"
+      String.contains?(name_lower, ["cake", "pastel"]) -> "🎂"
+      String.contains?(name_lower, ["ice cream", "helado"]) -> "🍦"
+      String.contains?(name_lower, ["coffee", "cafe"]) -> "☕"
+      String.contains?(name_lower, ["juice", "jugo"]) -> "🥤"
+      String.contains?(name_lower, ["beer", "cerveza"]) -> "🍺"
+      String.contains?(name_lower, ["wine", "vino"]) -> "🍷"
+      true -> "🍽"
+    end
+  end
+
+  # Darkens a hex color slightly for gradient effect
+  defp darken(color) do
+    color
+  end
 end
